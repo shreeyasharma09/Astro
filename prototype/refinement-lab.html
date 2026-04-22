@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Astro — Refinement Lab</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Nunito', 'system-ui', 'sans-serif'] },
+          colors: {
+            bg: '#FBF8FF',
+            surface: '#FFFFFF',
+            lilac: '#B5A5E8',
+            lilacStrong: '#8E78D0',
+            lilacSoft: '#E8E0FB',
+            sage: '#A8C9A8',
+            sageSoft: '#DFEDDF',
+            ink: '#2D2A3E',
+            mute: '#6B6880',
+            pinkSoft: '#FBEEF4'
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body { font-family: 'Nunito', system-ui, sans-serif; background: #EEE7F9; }
+    .card { box-shadow: 0 4px 16px rgba(45,42,62,0.08); }
+    .app-icon-frame {
+      background: linear-gradient(135deg, #E8E0FB 0%, #DEEDFB 100%);
+      border-radius: 22%;
+      box-shadow: 0 8px 24px rgba(45,42,62,0.12);
+    }
+  </style>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel" data-presets="react">
+  // ==============================================================
+  //  ASTRO — Refinement Lab
+  //  Two refinements to decide before locking in:
+  //    1. Panda with body vs head-only
+  //    2. Tulip redesign — cuter face + more tulip-shape
+  // ==============================================================
+
+  // ---------- Panda WITH body (current Astro) ----------
+  const PandaWithBody = ({ size = 140, mood = 'calm' }) => {
+    const cheekRosier = mood === 'cheer';
+    const mouth = mood === 'cheer'
+      ? <path d="M43 66 Q50 72 57 66" stroke="#1A1826" strokeWidth="2" fill="none" strokeLinecap="round"/>
+      : <path d="M45 67 Q50 70 55 67" stroke="#1A1826" strokeWidth="1.8" fill="none" strokeLinecap="round"/>;
+    return (
+      <svg viewBox="0 0 100 100" width={size} height={size} aria-hidden="true">
+        <defs>
+          <radialGradient id="haloPB" cx="50%" cy="50%" r="55%">
+            <stop offset="0%" stopColor="#E8E0FB" stopOpacity="0.9"/>
+            <stop offset="100%" stopColor="#E8E0FB" stopOpacity="0"/>
+          </radialGradient>
+          <linearGradient id="bodyPB" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stopColor="#FFFFFF"/>
+            <stop offset="100%" stopColor="#F5F0FC"/>
+          </linearGradient>
+        </defs>
+        <circle cx="50" cy="50" r="48" fill="url(#haloPB)"/>
+        <circle cx="26" cy="28" r="11" fill="#1A1826"/>
+        <circle cx="74" cy="28" r="11" fill="#1A1826"/>
+        <circle cx="26" cy="28" r="5.5" fill="#F2B5B5" opacity="0.55"/>
+        <circle cx="74" cy="28" r="5.5" fill="#F2B5B5" opacity="0.55"/>
+        {/* body + paws */}
+        <ellipse cx="50" cy="88" rx="22" ry="10" fill="url(#bodyPB)"/>
+        <ellipse cx="33" cy="90" rx="5" ry="3.5" fill="#1A1826"/>
+        <ellipse cx="67" cy="90" rx="5" ry="3.5" fill="#1A1826"/>
+        <circle cx="50" cy="52" r="32" fill="url(#bodyPB)"/>
+        <ellipse cx="28" cy="58" rx={cheekRosier ? 7.5 : 7} ry={cheekRosier ? 4.9 : 4.5} fill={cheekRosier ? '#EFB0BD' : '#F2B5B5'} opacity={cheekRosier ? 0.85 : 0.75}/>
+        <ellipse cx="72" cy="58" rx={cheekRosier ? 7.5 : 7} ry={cheekRosier ? 4.9 : 4.5} fill={cheekRosier ? '#EFB0BD' : '#F2B5B5'} opacity={cheekRosier ? 0.85 : 0.75}/>
+        <path d="M33 52 Q38 46 43 52" stroke="#1A1826" strokeWidth="2.4" fill="none" strokeLinecap="round"/>
+        <path d="M57 52 Q62 46 67 52" stroke="#1A1826" strokeWidth="2.4" fill="none" strokeLinecap="round"/>
+        <ellipse cx="50" cy="62" rx="2" ry="1.4" fill="#1A1826"/>
+        {mouth}
+        <path d="M80 18 Q86 14 90 20 Q85 24 80 22 Z" fill="#A8C9A8"/>
+      </svg>
+    );
+  };
+
+  // ---------- Panda HEAD ONLY (new option) ----------
+  const PandaHeadOnly = ({ size = 140, mood = 'calm' }) => {
+    const cheekRosier = mood === 'cheer';
+    const mouth = mood === 'cheer'
+      ? <path d="M43 66 Q50 72 57 66" stroke="#1A1826" strokeWidth="2" fill="none" strokeLinecap="round"/>
+      : <path d="M45 67 Q50 70 55 67" stroke="#1A1826" strokeWidth="1.8" fill="none" strokeLinecap="round"/>;
+    return (
+      <svg viewBox="0 0 100 100" width={size} height={size} aria-hidden="true">
+        <defs>
+          <radialGradient id="haloPH" cx="50%" cy="50%" r="55%">
+            <stop offset="0%" stopColor="#E8E0FB" stopOpacity="0.9"/>
+            <stop offset="100%" stopColor="#E8E0FB" stopOpacity="0"/>
+          </radialGradient>
+          <linearGradient id="bodyPH" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stopColor="#FFFFFF"/>
+            <stop offset="100%" stopColor="#F5F0FC"/>
+          </linearGradient>
+        </defs>
+        <circle cx="50" cy="52" r="48" fill="url(#haloPH)"/>
+        {/* ears */}
+        <circle cx="24" cy="30" r="12" fill="#1A1826"/>
+        <circle cx="76" cy="30" r="12" fill="#1A1826"/>
+        <circle cx="24" cy="30" r="6" fill="#F2B5B5" opacity="0.55"/>
+        <circle cx="76" cy="30" r="6" fill="#F2B5B5" opacity="0.55"/>
+        {/* head — larger and centered */}
+        <circle cx="50" cy="56" r="34" fill="url(#bodyPH)"/>
+        <ellipse cx="26" cy="62" rx={cheekRosier ? 7.5 : 7} ry={cheekRosier ? 4.9 : 4.5} fill={cheekRosier ? '#EFB0BD' : '#F2B5B5'} opacity={cheekRosier ? 0.85 : 0.75}/>
+        <ellipse cx="74" cy="62" rx={cheekRosier ? 7.5 : 7} ry={cheekRosier ? 4.9 : 4.5} fill={cheekRosier ? '#EFB0BD' : '#F2B5B5'} opacity={cheekRosier ? 0.85 : 0.75}/>
+        <path d="M33 56 Q38 50 43 56" stroke="#1A1826" strokeWidth="2.4" fill="none" strokeLinecap="round"/>
+        <path d="M57 56 Q62 50 67 56" stroke="#1A1826" strokeWidth="2.4" fill="none" strokeLinecap="round"/>
+        <ellipse cx="50" cy="66" rx="2" ry="1.4" fill="#1A1826"/>
+        {mouth === null ? null : (
+          mood === 'cheer'
+            ? <path d="M43 70 Q50 76 57 70" stroke="#1A1826" strokeWidth="2" fill="none" strokeLinecap="round"/>
+            : <path d="M45 71 Q50 74 55 71" stroke="#1A1826" strokeWidth="1.8" fill="none" strokeLinecap="round"/>
+        )}
+        <path d="M82 20 Q88 16 92 22 Q87 26 82 24 Z" fill="#A8C9A8"/>
+      </svg>
+    );
+  };
+
+  // ==============================================================
+  //  TULIP V3 — Outlined kawaii (matches reference images)
+  //  Single unified silhouette, bold dark outline, pink fill,
+  //  small cute dot-eye face, two teardrop leaves curling out,
+  //  brown stem.
+  // ==============================================================
+  const TulipV3 = ({ size = 140 }) => (
+    <svg viewBox="0 0 100 110" width={size} height={size * 1.1} aria-hidden="true">
+      <defs>
+        <linearGradient id="tulipPink_v3" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor="#FBC9D6"/>
+          <stop offset="100%" stopColor="#ED8FA3"/>
+        </linearGradient>
+        <linearGradient id="leafGrad_v3" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor="#A8C9A8"/>
+          <stop offset="100%" stopColor="#7AA67A"/>
+        </linearGradient>
+      </defs>
+
+      {/* ---- LEAVES (drawn first, behind stem ends) ---- */}
+      <path d="M 50 74
+               Q 30 72 20 82
+               Q 22 90 34 88
+               Q 46 84 50 82
+               Z"
+            fill="url(#leafGrad_v3)"
+            stroke="#2D2A3E" strokeWidth="2" strokeLinejoin="round"/>
+      {/* leaf vein */}
+      <path d="M 26 83 Q 38 83 46 81"
+            stroke="#2D2A3E" strokeWidth="1.2" fill="none" strokeLinecap="round" opacity="0.45"/>
+
+      <path d="M 50 74
+               Q 70 72 80 82
+               Q 78 90 66 88
+               Q 54 84 50 82
+               Z"
+            fill="url(#leafGrad_v3)"
+            stroke="#2D2A3E" strokeWidth="2" strokeLinejoin="round"/>
+      <path d="M 74 83 Q 62 83 54 81"
+            stroke="#2D2A3E" strokeWidth="1.2" fill="none" strokeLinecap="round" opacity="0.45"/>
+
+      {/* ---- STEM ---- */}
+      <path d="M 50 66 L 50 92"
+            stroke="#8B5E3C" strokeWidth="3.5" strokeLinecap="round" fill="none"/>
+
+      {/* ---- BLOOM silhouette — single unified shape, classic tulip ---- */}
+      <path d="M 26 50
+               Q 22 28 32 22
+               Q 38 18 42 26
+               Q 46 16 50 14
+               Q 54 16 58 26
+               Q 62 18 68 22
+               Q 78 28 74 50
+               Q 72 64 50 66
+               Q 28 64 26 50 Z"
+            fill="url(#tulipPink_v3)"
+            stroke="#2D2A3E" strokeWidth="2.2" strokeLinejoin="round"/>
+
+      {/* inner petal division lines (not separate shapes, just lines) */}
+      <path d="M 43 26 Q 42 36 40 48"
+            stroke="#2D2A3E" strokeWidth="1.4" fill="none" strokeLinecap="round" opacity="0.7"/>
+      <path d="M 57 26 Q 58 36 60 48"
+            stroke="#2D2A3E" strokeWidth="1.4" fill="none" strokeLinecap="round" opacity="0.7"/>
+
+      {/* subtle highlight on middle petal */}
+      <path d="M 48 14 Q 50 12 52 14"
+            stroke="#FFFFFF" strokeWidth="1.2" fill="none" strokeLinecap="round" opacity="0.7"/>
+
+      {/* ---- FACE ---- */}
+      {/* Eyes — simple dots with tiny highlight */}
+      <circle cx="43" cy="40" r="2.4" fill="#2D2A3E"/>
+      <circle cx="57" cy="40" r="2.4" fill="#2D2A3E"/>
+      <circle cx="42.4" cy="39.2" r="0.9" fill="#FFFFFF"/>
+      <circle cx="56.4" cy="39.2" r="0.9" fill="#FFFFFF"/>
+
+      {/* Cheek blush */}
+      <ellipse cx="38" cy="48" rx="3" ry="1.8" fill="#E87A92" opacity="0.55"/>
+      <ellipse cx="62" cy="48" rx="3" ry="1.8" fill="#E87A92" opacity="0.55"/>
+
+      {/* Small smile */}
+      <path d="M 46 47 Q 50 51 54 47"
+            stroke="#2D2A3E" strokeWidth="1.6" fill="none" strokeLinecap="round"/>
+    </svg>
+  );
+
+  // V3B — same base but closed crescent eyes to match the panda
+  const TulipV3Closed = ({ size = 140 }) => (
+    <svg viewBox="0 0 100 110" width={size} height={size * 1.1} aria-hidden="true">
+      <defs>
+        <linearGradient id="tulipPink_v3b" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor="#FBC9D6"/>
+          <stop offset="100%" stopColor="#ED8FA3"/>
+        </linearGradient>
+        <linearGradient id="leafGrad_v3b" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor="#A8C9A8"/>
+          <stop offset="100%" stopColor="#7AA67A"/>
+        </linearGradient>
+      </defs>
+
+      <path d="M 50 74 Q 30 72 20 82 Q 22 90 34 88 Q 46 84 50 82 Z"
+            fill="url(#leafGrad_v3b)" stroke="#2D2A3E" strokeWidth="2" strokeLinejoin="round"/>
+      <path d="M 26 83 Q 38 83 46 81" stroke="#2D2A3E" strokeWidth="1.2" fill="none" strokeLinecap="round" opacity="0.45"/>
+      <path d="M 50 74 Q 70 72 80 82 Q 78 90 66 88 Q 54 84 50 82 Z"
+            fill="url(#leafGrad_v3b)" stroke="#2D2A3E" strokeWidth="2" strokeLinejoin="round"/>
+      <path d="M 74 83 Q 62 83 54 81" stroke="#2D2A3E" strokeWidth="1.2" fill="none" strokeLinecap="round" opacity="0.45"/>
+
+      <path d="M 50 66 L 50 92" stroke="#8B5E3C" strokeWidth="3.5" strokeLinecap="round" fill="none"/>
+
+      <path d="M 26 50
+               Q 22 28 32 22
+               Q 38 18 42 26
+               Q 46 16 50 14
+               Q 54 16 58 26
+               Q 62 18 68 22
+               Q 78 28 74 50
+               Q 72 64 50 66
+               Q 28 64 26 50 Z"
+            fill="url(#tulipPink_v3b)" stroke="#2D2A3E" strokeWidth="2.2" strokeLinejoin="round"/>
+
+      <path d="M 43 26 Q 42 36 40 48" stroke="#2D2A3E" strokeWidth="1.4" fill="none" strokeLinecap="round" opacity="0.7"/>
+      <path d="M 57 26 Q 58 36 60 48" stroke="#2D2A3E" strokeWidth="1.4" fill="none" strokeLinecap="round" opacity="0.7"/>
+
+      <path d="M 48 14 Q 50 12 52 14" stroke="#FFFFFF" strokeWidth="1.2" fill="none" strokeLinecap="round" opacity="0.7"/>
+
+      {/* Closed crescent eyes */}
+      <path d="M 40 41 Q 43 37 46 41" stroke="#2D2A3E" strokeWidth="1.8" fill="none" strokeLinecap="round"/>
+      <path d="M 54 41 Q 57 37 60 41" stroke="#2D2A3E" strokeWidth="1.8" fill="none" strokeLinecap="round"/>
+
+      <ellipse cx="38" cy="48" rx="3" ry="1.8" fill="#E87A92" opacity="0.55"/>
+      <ellipse cx="62" cy="48" rx="3" ry="1.8" fill="#E87A92" opacity="0.55"/>
+
+      <path d="M 46 47 Q 50 51 54 47" stroke="#2D2A3E" strokeWidth="1.6" fill="none" strokeLinecap="round"/>
+    </svg>
+  );
+
+  // Old tulip (for comparison)
+  const TulipOld = ({ size = 140 }) => (
+    <svg viewBox="0 0 100 100" width={size} height={size} aria-hidden="true">
+      <defs>
+        <linearGradient id="tulipOldPink" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor="#F7C5D1"/>
+          <stop offset="100%" stopColor="#EFA0B0"/>
+        </linearGradient>
+        <linearGradient id="leafOld" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor="#B8D9B8"/>
+          <stop offset="100%" stopColor="#7FAE7F"/>
+        </linearGradient>
+      </defs>
+      <path d="M 50 60 L 50 94" stroke="#7FAE7F" strokeWidth="3" strokeLinecap="round" fill="none"/>
+      <path d="M 49 78 Q 32 72 22 84 Q 24 90 34 90 Q 44 88 49 84 Z" fill="url(#leafOld)"/>
+      <path d="M 51 78 Q 68 72 78 84 Q 76 90 66 90 Q 56 88 51 84 Z" fill="url(#leafOld)"/>
+      <path d="M 32 38 C 30 28 38 22 44 23 L 56 23 C 62 22 70 28 68 38 C 68 56 60 62 50 63 C 40 62 32 56 32 38 Z" fill="url(#tulipOldPink)"/>
+      <circle cx="40" cy="24" r="5.5" fill="url(#tulipOldPink)"/>
+      <circle cx="50" cy="21" r="6" fill="url(#tulipOldPink)"/>
+      <circle cx="60" cy="24" r="5.5" fill="url(#tulipOldPink)"/>
+      <path d="M 38 40 Q 42 36 46 40" stroke="#1A1826" strokeWidth="1.8" fill="none" strokeLinecap="round"/>
+      <path d="M 54 40 Q 58 36 62 40" stroke="#1A1826" strokeWidth="1.8" fill="none" strokeLinecap="round"/>
+      <circle cx="38" cy="47" r="2.4" fill="#E87A92" opacity="0.55"/>
+      <circle cx="62" cy="47" r="2.4" fill="#E87A92" opacity="0.55"/>
+      <path d="M 46 46 Q 50 50 54 46" stroke="#1A1826" strokeWidth="1.6" fill="none" strokeLinecap="round"/>
+    </svg>
+  );
+
+  const Wordmark = ({ size = 28 }) => (
+    <span style={{ fontWeight: 800, fontSize: size, color: '#2D2A3E', letterSpacing: -1 }}>Astro</span>
+  );
+
+  // ==============================================================
+  //  APP
+  // ==============================================================
+  const App = () => (
+    <div className="min-h-screen py-10 px-5 md:px-10">
+      <div className="max-w-6xl mx-auto">
+        <div className="mb-10 text-center">
+          <p className="text-[11px] uppercase font-bold tracking-[0.2em] text-lilacStrong">Refinement Lab</p>
+          <h1 className="text-4xl md:text-5xl font-extrabold text-ink mt-2">Two last decisions</h1>
+          <p className="text-mute mt-3 max-w-xl mx-auto">Pick a panda body direction, pick a tulip silhouette. Nothing here is wired yet.</p>
+        </div>
+
+        {/* ---------- DECISION 1: PANDA BODY ---------- */}
+        <div className="card bg-surface rounded-2xl p-6 mb-8">
+          <p className="text-[11px] uppercase font-bold tracking-widest text-mute">Decision 1</p>
+          <h2 className="text-2xl font-extrabold text-ink mt-1 mb-6">Body + paws · or · Head only?</h2>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* With body */}
+            <div className="flex flex-col gap-4">
+              <div className="rounded-2xl p-8 flex items-center justify-center" style={{ background: '#E8E0FB' }}>
+                <PandaWithBody size={220}/>
+              </div>
+              <div>
+                <h3 className="text-xl font-extrabold text-ink">With body + paws</h3>
+                <p className="text-sm text-mute mt-1 leading-relaxed">
+                  Feels more like a character / companion. The tiny paws peeking add softness. Slightly less clean as a logo mark because there's more going on at small sizes.
+                </p>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div className="bg-lilacSoft rounded-xl p-3 flex flex-col items-center">
+                  <PandaWithBody size={70}/>
+                  <p className="text-[10px] uppercase font-bold tracking-wide text-mute mt-1">Calm</p>
+                </div>
+                <div className="bg-lilacSoft rounded-xl p-3 flex flex-col items-center">
+                  <PandaWithBody size={70} mood="cheer"/>
+                  <p className="text-[10px] uppercase font-bold tracking-wide text-mute mt-1">Cheer</p>
+                </div>
+                <div className="bg-lilacSoft rounded-xl p-3 flex flex-col items-center justify-center">
+                  <div className="w-12 h-12 app-icon-frame flex items-center justify-center overflow-hidden">
+                    <PandaWithBody size={46}/>
+                  </div>
+                  <p className="text-[10px] uppercase font-bold tracking-wide text-mute mt-1">Icon</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 bg-lilacSoft rounded-xl p-3 justify-center">
+                <PandaWithBody size={40}/>
+                <Wordmark size={22}/>
+              </div>
+            </div>
+
+            {/* Head only */}
+            <div className="flex flex-col gap-4">
+              <div className="rounded-2xl p-8 flex items-center justify-center" style={{ background: '#DEEDFB' }}>
+                <PandaHeadOnly size={220}/>
+              </div>
+              <div>
+                <h3 className="text-xl font-extrabold text-ink">Head only</h3>
+                <p className="text-sm text-mute mt-1 leading-relaxed">
+                  Cleaner as a logo mark. Scales better at small sizes (chat avatar, tab bar). Slightly less character energy but more brand discipline. The head is bigger because it fills the available space.
+                </p>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div className="bg-lilacSoft rounded-xl p-3 flex flex-col items-center">
+                  <PandaHeadOnly size={70}/>
+                  <p className="text-[10px] uppercase font-bold tracking-wide text-mute mt-1">Calm</p>
+                </div>
+                <div className="bg-lilacSoft rounded-xl p-3 flex flex-col items-center">
+                  <PandaHeadOnly size={70} mood="cheer"/>
+                  <p className="text-[10px] uppercase font-bold tracking-wide text-mute mt-1">Cheer</p>
+                </div>
+                <div className="bg-lilacSoft rounded-xl p-3 flex flex-col items-center justify-center">
+                  <div className="w-12 h-12 app-icon-frame flex items-center justify-center overflow-hidden">
+                    <PandaHeadOnly size={46}/>
+                  </div>
+                  <p className="text-[10px] uppercase font-bold tracking-wide text-mute mt-1">Icon</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 bg-lilacSoft rounded-xl p-3 justify-center">
+                <PandaHeadOnly size={40}/>
+                <Wordmark size={22}/>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6 p-4 rounded-xl bg-lilacSoft text-sm text-ink leading-relaxed">
+            <strong>My lean:</strong> head-only for the app icon / brand mark, with-body for large illustrations (splash, reflection moments). You get clean brand at small sizes and character warmth at big sizes. Best of both — and it's what Duolingo, Finch, and similar apps actually do.
+          </div>
+        </div>
+
+        {/* ---------- DECISION 2: TULIP REDO ---------- */}
+        <div className="card bg-surface rounded-2xl p-6">
+          <p className="text-[11px] uppercase font-bold tracking-widest text-mute">Decision 2 · Redo</p>
+          <h2 className="text-2xl font-extrabold text-ink mt-1 mb-2">Tulip, but done right</h2>
+          <p className="text-sm text-mute mb-6">Rebuilt to match the reference kawaii style — single bold dark outline, classic tulip silhouette, teardrop leaves curling outward, brown stem, small cute face. Two face options side-by-side.</p>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* V3 with dot eyes (matches refs 1 & 2) */}
+            <div className="flex flex-col gap-3">
+              <div className="rounded-2xl p-8 flex items-center justify-center" style={{ background: '#FFF8E8' }}>
+                <TulipV3 size={240}/>
+              </div>
+              <p className="text-[11px] uppercase font-bold tracking-widest text-lilacStrong">V3 · Dot eyes</p>
+              <h3 className="text-lg font-extrabold text-ink">Small round eyes with highlights</h3>
+              <p className="text-sm text-mute">Closest match to your reference images. Open dot eyes read as "awake and listening" — friendly and alert. Bold outline keeps it legible at any size.</p>
+            </div>
+
+            {/* V3 with closed eyes (matches the panda) */}
+            <div className="flex flex-col gap-3">
+              <div className="rounded-2xl p-8 flex items-center justify-center" style={{ background: '#FBEEF4' }}>
+                <TulipV3Closed size={240}/>
+              </div>
+              <p className="text-[11px] uppercase font-bold tracking-widest text-lilacStrong">V3 · Closed eyes</p>
+              <h3 className="text-lg font-extrabold text-ink">Closed crescent eyes (matches panda)</h3>
+              <p className="text-sm text-mute">Same outlined tulip but with the peaceful closed-eye look your panda uses. Keeps the two mascots visually consistent if you use both.</p>
+            </div>
+          </div>
+
+          {/* Size test */}
+          <div className="mt-8 p-5 rounded-xl" style={{ background: '#FFF8E8' }}>
+            <p className="text-xs font-bold uppercase tracking-wide text-mute mb-3">V3 · size legibility</p>
+            <div className="flex items-end gap-6 justify-center">
+              <div className="flex flex-col items-center gap-1">
+                <TulipV3 size={28}/>
+                <p className="text-[10px] text-mute">28pt</p>
+              </div>
+              <div className="flex flex-col items-center gap-1">
+                <TulipV3 size={48}/>
+                <p className="text-[10px] text-mute">48pt</p>
+              </div>
+              <div className="flex flex-col items-center gap-1">
+                <TulipV3 size={72}/>
+                <p className="text-[10px] text-mute">72pt</p>
+              </div>
+              <div className="flex flex-col items-center gap-1">
+                <TulipV3 size={110}/>
+                <p className="text-[10px] text-mute">110pt</p>
+              </div>
+              <div className="flex flex-col items-center gap-1">
+                <div className="w-20 h-20 app-icon-frame flex items-center justify-center overflow-hidden p-1">
+                  <TulipV3 size={72}/>
+                </div>
+                <p className="text-[10px] text-mute">App icon</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Old for context */}
+          <div className="mt-6">
+            <p className="text-xs font-bold uppercase tracking-wide text-mute mb-2 text-center">Earlier attempts (for comparison)</p>
+            <div className="flex items-end gap-6 justify-center">
+              <div className="flex flex-col items-center gap-1 p-4 rounded-xl" style={{ background: '#F5F0FC' }}>
+                <TulipOld size={100}/>
+                <p className="text-[10px] text-mute">V1 · Round blob</p>
+              </div>
+            </div>
+          </div>
+
+          {/* wordmark pairings */}
+          <div className="mt-6 grid md:grid-cols-2 gap-6">
+            <div className="flex items-center gap-3 rounded-xl p-4 justify-center" style={{ background: '#FFF8E8' }}>
+              <TulipV3 size={56}/>
+              <Wordmark size={30}/>
+            </div>
+            <div className="flex items-center gap-3 rounded-xl p-4 justify-center" style={{ background: '#FBEEF4' }}>
+              <TulipV3Closed size={56}/>
+              <Wordmark size={30}/>
+            </div>
+          </div>
+
+          <div className="mt-6 p-4 rounded-xl bg-sageSoft text-sm text-ink leading-relaxed">
+            <strong>My lean:</strong> V3 Closed eyes — the tulip and panda share the same peaceful aesthetic, and they read as one brand family. V3 Dot eyes is the safer "standalone flower logo" choice if you're leaning toward the tulip being the primary and the panda secondary. Either way, this tulip finally reads as a tulip.
+          </div>
+        </div>
+
+        <p className="text-center text-xs text-mute mt-10">
+          Refinement Lab · draft for review · nothing here is shipped
+        </p>
+      </div>
+    </div>
+  );
+
+  ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
