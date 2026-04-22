@@ -1,0 +1,1431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Astro — Social Anxiety Practice</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Nunito', 'system-ui', '-apple-system', 'sans-serif']
+          },
+          colors: {
+            bg: { light: '#FBF8FF', dark: '#1A1826' },
+            surface: { light: '#FFFFFF', dark: '#252236' },
+            lilac: { DEFAULT: '#B5A5E8', strong: '#8E78D0', soft: '#E8E0FB', dark: '#C9BAF5' },
+            sage: { DEFAULT: '#A8C9A8', strong: '#7FAE7F', soft: '#DFEDDF', dark: '#B8D9B8' },
+            sky: { DEFAULT: '#A5C9E8', strong: '#6FA5D1', soft: '#DEEDFB', dark: '#B5D9F5' },
+            coral: '#F2B5B5',
+            crisis: '#E8655C',
+            ink: { light: '#2D2A3E', dark: '#F0EEF8' },
+            mute: { light: '#6B6880', dark: '#9C9AAD' }
+          },
+          borderRadius: {
+            card: '16px',
+            btn: '12px',
+            modal: '20px'
+          },
+          boxShadow: {
+            soft: '0 4px 16px rgba(45,42,62,0.08)',
+            'soft-dark': '0 4px 16px rgba(0,0,0,0.3)'
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    html, body {
+      font-family: 'Nunito', system-ui, -apple-system, sans-serif;
+      overscroll-behavior: none;
+      background: #EEE7F9;
+    }
+    .dark html, .dark body { background: #0E0D18; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .device-frame {
+      width: 100%;
+      max-width: 420px;
+      height: 100dvh;
+      max-height: 900px;
+      border-radius: 44px;
+      overflow: hidden;
+      box-shadow: 0 24px 60px rgba(45,42,62,0.18);
+      position: relative;
+    }
+    @media (max-width: 430px) {
+      .device-frame { border-radius: 0; max-height: 100dvh; box-shadow: none; }
+    }
+    .dark .device-frame { box-shadow: 0 24px 60px rgba(0,0,0,0.5); }
+    .fade-enter { animation: fade 220ms ease-out; }
+    @keyframes fade {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .pulse-slow { animation: pulseSoft 2.4s ease-in-out infinite; }
+    @keyframes pulseSoft {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.04); }
+    }
+    .typing-dot { animation: typing 1s infinite; }
+    .typing-dot:nth-child(2) { animation-delay: 0.15s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.3s; }
+    @keyframes typing {
+      0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+      30% { opacity: 1; transform: translateY(-3px); }
+    }
+  </style>
+
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+
+<body>
+  <!-- Dev tools bar (hidden on small screens) -->
+  <div id="dev-bar" class="hidden sm:flex fixed top-3 right-3 z-50 gap-2 items-center text-xs"></div>
+
+  <div id="root" class="min-h-dvh flex items-center justify-center p-0 sm:p-6"></div>
+
+  <script type="text/babel" data-presets="react">
+  // ==============================================================
+  //  ASTRO — Social Anxiety Practice App
+  //  Brand mark: Tulip. Companion: Momo the Panda.
+  //  Interactive prototype. No backend, no LLM. All content static.
+  // ==============================================================
+
+  const { useState, useEffect, useMemo, useRef } = React;
+
+  // ---------- Icons (minimal inline SVG set) ----------
+  const Icon = ({ name, size = 22, className = '' }) => {
+    const common = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round', className };
+    const paths = {
+      home: <><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></>,
+      sparkle: <><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6 8.4 8.4M15.6 15.6l2.8 2.8M5.6 18.4 8.4 15.6M15.6 8.4l2.8-2.8"/></>,
+      bell: <><path d="M6 8a6 6 0 1 1 12 0c0 7 3 7 3 9H3c0-2 3-2 3-9z"/><path d="M10 21a2 2 0 0 0 4 0"/></>,
+      book: <><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></>,
+      user: <><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 5-6 8-6s6.5 2 8 6"/></>,
+      chevronLeft: <><path d="M15 18l-6-6 6-6"/></>,
+      chevronRight: <><path d="M9 6l6 6-6 6"/></>,
+      x: <><path d="M6 6l12 12M18 6L6 18"/></>,
+      check: <><path d="M5 12l5 5L20 7"/></>,
+      send: <><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></>,
+      clock: <><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></>,
+      heart: <><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.5l-1-.9a5.5 5.5 0 1 0-7.8 7.8l1 .9L12 21l7.8-7.7 1-.9a5.5 5.5 0 0 0 0-7.8z"/></>,
+      moon: <><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></>,
+      sun: <><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></>,
+      arrowRight: <><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></>,
+      plus: <><path d="M12 5v14M5 12h14"/></>,
+      phone: <><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3.1-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.6a2 2 0 0 1-.5 2.1L8 9.6a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.1-.5c.8.3 1.7.5 2.6.6a2 2 0 0 1 1.7 2.2z"/></>,
+      shield: <><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></>,
+      settings: <><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .4 1.9l.1.1a2 2 0 1 1-2.9 2.9l-.1-.1a1.7 1.7 0 0 0-1.9-.4 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.9.4l-.1.1a2 2 0 1 1-2.9-2.9l.1-.1a1.7 1.7 0 0 0 .4-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.4-1.9l-.1-.1a2 2 0 1 1 2.9-2.9l.1.1a1.7 1.7 0 0 0 1.9.4H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.4l.1-.1a2 2 0 1 1 2.9 2.9l-.1.1a1.7 1.7 0 0 0-.4 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></>,
+      wind: <><path d="M9.6 8a3 3 0 1 1 2.5 4.5H2"/><path d="M12 19.5a3 3 0 1 0 2.5-4.5H2"/><path d="M17.7 4.5a3.5 3.5 0 1 1 2.8 5H2"/></>,
+      trash: <><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M6 6l1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14"/></>,
+      lock: <><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 1 1 8 0v4"/></>
+    };
+    return <svg {...common}>{paths[name]}</svg>;
+  };
+
+  // ---------- Momo the Panda (companion mascot) ----------
+  // Closed-eye by default; emotion via mouth + cheek intensity.
+  const Panda = ({ mood = 'calm', size = 120, className = '' }) => {
+    const cheek = {
+      calm:      { size: 7,   opacity: 0.75, color: '#F2B5B5' },
+      cheer:     { size: 7.5, opacity: 0.85, color: '#EFB0BD' },
+      listen:    { size: 7,   opacity: 0.75, color: '#F2B5B5' },
+      concern:   { size: 6,   opacity: 0.55, color: '#F2B5B5' },
+      sleep:     { size: 7,   opacity: 0.70, color: '#F2B5B5' },
+      breathing: { size: 7,   opacity: 0.70, color: '#F2B5B5' }
+    }[mood] || { size: 7, opacity: 0.75, color: '#F2B5B5' };
+
+    const renderMouth = () => {
+      switch (mood) {
+        case 'cheer':
+          return <path d="M43 66 Q50 72 57 66" stroke="#1A1826" strokeWidth="2" fill="none" strokeLinecap="round"/>;
+        case 'concern':
+          return <path d="M46 69 Q50 68 54 69" stroke="#1A1826" strokeWidth="1.8" fill="none" strokeLinecap="round"/>;
+        case 'breathing':
+          return <ellipse cx="50" cy="69" rx="2.2" ry="1.8" fill="#1A1826" opacity="0.75"/>;
+        default:
+          return <path d="M45 67 Q50 70 55 67" stroke="#1A1826" strokeWidth="1.8" fill="none" strokeLinecap="round"/>;
+      }
+    };
+
+    const renderBrows = () => {
+      if (mood !== 'concern') return null;
+      return (
+        <>
+          <path d="M33 44 Q37 43 41 45" stroke="#1A1826" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+          <path d="M59 45 Q63 43 67 44" stroke="#1A1826" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+        </>
+      );
+    };
+
+    return (
+      <svg viewBox="0 0 100 100" width={size} height={size} className={className} aria-hidden="true">
+        <defs>
+          <radialGradient id="haloMomo" cx="50%" cy="50%" r="55%">
+            <stop offset="0%" stopColor="#E8E0FB" stopOpacity="0.9"/>
+            <stop offset="100%" stopColor="#E8E0FB" stopOpacity="0"/>
+          </radialGradient>
+          <linearGradient id="bodyMomo" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stopColor="#FFFFFF"/>
+            <stop offset="100%" stopColor="#F5F0FC"/>
+          </linearGradient>
+        </defs>
+        <circle cx="50" cy="50" r="48" fill="url(#haloMomo)"/>
+        {/* ears */}
+        <circle cx="26" cy="28" r="11" fill="#1A1826"/>
+        <circle cx="74" cy="28" r="11" fill="#1A1826"/>
+        <circle cx="26" cy="28" r="5.5" fill="#F2B5B5" opacity="0.55"/>
+        <circle cx="74" cy="28" r="5.5" fill="#F2B5B5" opacity="0.55"/>
+        {/* body + paws */}
+        <ellipse cx="50" cy="88" rx="22" ry="10" fill="url(#bodyMomo)"/>
+        <ellipse cx="33" cy="90" rx="5" ry="3.5" fill="#1A1826"/>
+        <ellipse cx="67" cy="90" rx="5" ry="3.5" fill="#1A1826"/>
+        {/* head */}
+        <circle cx="50" cy="52" r="32" fill="url(#bodyMomo)"/>
+        {/* cheeks */}
+        <ellipse cx="28" cy="58" rx={cheek.size} ry={cheek.size * 0.65} fill={cheek.color} opacity={cheek.opacity}/>
+        <ellipse cx="72" cy="58" rx={cheek.size} ry={cheek.size * 0.65} fill={cheek.color} opacity={cheek.opacity}/>
+        {/* closed crescent eyes */}
+        <path d="M33 52 Q38 46 43 52" stroke="#1A1826" strokeWidth="2.4" fill="none" strokeLinecap="round"/>
+        <path d="M57 52 Q62 46 67 52" stroke="#1A1826" strokeWidth="2.4" fill="none" strokeLinecap="round"/>
+        {renderBrows()}
+        {/* nose */}
+        <ellipse cx="50" cy="62" rx="2" ry="1.4" fill="#1A1826"/>
+        {/* mouth */}
+        {renderMouth()}
+        {/* sage leaf accent on ear */}
+        <path d="M80 18 Q86 14 90 20 Q85 24 80 22 Z" fill="#A8C9A8"/>
+      </svg>
+    );
+  };
+
+  // ---------- Astro Tulip (brand mark) ----------
+  // Closed-eye tulip used for brand identity, app icon, splash.
+  const Tulip = ({ size = 120, className = '', showLeaves = true, showStem = true, showFace = true }) => (
+    <svg viewBox="0 0 100 100" width={size} height={size} className={className} aria-hidden="true">
+      <defs>
+        <linearGradient id="tulipPinkMain" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor="#FBC9D6"/>
+          <stop offset="100%" stopColor="#ED8FA3"/>
+        </linearGradient>
+        <linearGradient id="tulipLeafMain" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor="#A8C9A8"/>
+          <stop offset="100%" stopColor="#7AA67A"/>
+        </linearGradient>
+      </defs>
+      {showLeaves && (
+        <>
+          <path d="M 50 74 Q 30 72 20 82 Q 22 90 34 88 Q 46 84 50 82 Z"
+                fill="url(#tulipLeafMain)" stroke="#2D2A3E" strokeWidth="2" strokeLinejoin="round"/>
+          <path d="M 26 83 Q 38 83 46 81"
+                stroke="#2D2A3E" strokeWidth="1.2" fill="none" strokeLinecap="round" opacity="0.45"/>
+          <path d="M 50 74 Q 70 72 80 82 Q 78 90 66 88 Q 54 84 50 82 Z"
+                fill="url(#tulipLeafMain)" stroke="#2D2A3E" strokeWidth="2" strokeLinejoin="round"/>
+          <path d="M 74 83 Q 62 83 54 81"
+                stroke="#2D2A3E" strokeWidth="1.2" fill="none" strokeLinecap="round" opacity="0.45"/>
+        </>
+      )}
+      {showStem && (
+        <path d="M 50 66 L 50 92" stroke="#8B5E3C" strokeWidth="3.5" strokeLinecap="round" fill="none"/>
+      )}
+      {/* bloom */}
+      <path d="M 26 50
+               Q 22 28 32 22
+               Q 38 18 42 26
+               Q 46 18 50 17
+               Q 54 18 58 26
+               Q 62 18 68 22
+               Q 78 28 74 50
+               Q 72 64 50 66
+               Q 28 64 26 50 Z"
+            fill="url(#tulipPinkMain)" stroke="#2D2A3E" strokeWidth="2.2" strokeLinejoin="round"/>
+      {showFace && (
+        <>
+          {/* closed crescent eyes */}
+          <path d="M 40 41 Q 43 37 46 41" stroke="#2D2A3E" strokeWidth="1.8" fill="none" strokeLinecap="round"/>
+          <path d="M 54 41 Q 57 37 60 41" stroke="#2D2A3E" strokeWidth="1.8" fill="none" strokeLinecap="round"/>
+          {/* cheeks */}
+          <ellipse cx="38" cy="48" rx="3" ry="1.8" fill="#E87A92" opacity="0.55"/>
+          <ellipse cx="62" cy="48" rx="3" ry="1.8" fill="#E87A92" opacity="0.55"/>
+          {/* smile */}
+          <path d="M 46 47 Q 50 51 54 47" stroke="#2D2A3E" strokeWidth="1.6" fill="none" strokeLinecap="round"/>
+        </>
+      )}
+    </svg>
+  );
+
+  // Icon-sized Tulip (16-32pt) — drops leaves and stem
+  const TulipMark = ({ size = 24, className = '' }) => (
+    <Tulip size={size} className={className} showLeaves={false} showStem={false}/>
+  );
+
+  // ---------- Scenarios ----------
+  const SCENARIOS = [
+    { id: 'coffee', title: 'Ordering Coffee at a Counter', short: 'Ordering coffee', difficulty: 1, category: 'Food & Drink', emoji: '☕',
+      summary: 'Stating a clear order, handling a small interruption, thanking the person.',
+      character: 'Friendly but slightly busy barista.',
+      opener: "Hi there, welcome in! What can I get started for you today?" },
+    { id: 'directions', title: 'Asking a Stranger for Directions', short: 'Asking for directions', difficulty: 1, category: 'Out & About', emoji: '🧭',
+      summary: 'Opening with a polite excuse-me, stating the ask, thanking and exiting.',
+      character: 'Passerby, polite, in a mild hurry.',
+      opener: "Oh — hi, yeah, what's up?" },
+    { id: 'menu', title: 'Asking a Server About the Menu', short: 'Menu questions', difficulty: 2, category: 'Food & Drink', emoji: '🍽️',
+      summary: 'Asking about ingredients or swaps without over-apologizing.',
+      character: 'Attentive server.',
+      opener: "Hi! Are you ready to order, or do you have questions about the menu?" },
+    { id: 'phone-appt', title: 'Calling to Book an Appointment', short: 'Phone call: appointment', difficulty: 2, category: 'Phone Calls', emoji: '📞',
+      summary: 'Stating your reason, giving info, handling being put on hold.',
+      character: 'Clinic receptionist.',
+      opener: "Good morning, Dr. Patel's office, this is Marie. How can I help you?" },
+    { id: 'return', title: 'Returning an Item to a Store', short: 'Returning an item', difficulty: 3, category: 'Out & About', emoji: '🛍️',
+      summary: 'Explaining the return calmly, handling a "let me check with my manager".',
+      character: 'Customer service associate, neutral.',
+      opener: "Hi, were you looking to return something?" },
+    { id: 'professor', title: 'Asking a Professor After Class', short: 'Question for a professor', difficulty: 3, category: 'School & Work', emoji: '🎓',
+      summary: 'Framing a specific question, admitting what you don\'t understand.',
+      character: 'Professor, friendly, finishing up notes.',
+      opener: "Hey — did you have a question? I've got a minute before my next thing." },
+    { id: 'smalltalk', title: 'Small Talk with a Classmate', short: 'Small talk', difficulty: 3, category: 'School & Work', emoji: '💬',
+      summary: 'Returning a question, picking up a conversational thread, ending warmly.',
+      character: 'Classmate, approachable.',
+      opener: "Oh hey — how's your week going?" },
+    { id: 'party', title: 'Joining a Group Conversation at a Party', short: 'Joining a group', difficulty: 4, category: 'Social Events', emoji: '🎉',
+      summary: 'Waiting for a pause, a brief intro, a light on-topic comment.',
+      character: 'Two friends mid-conversation.',
+      opener: "[They're talking about a show they both watched. You approach.]" },
+    { id: 'meeting', title: 'Speaking Up in a Group Meeting', short: 'Speaking up in a group', difficulty: 4, category: 'School & Work', emoji: '👥',
+      summary: 'Verbal entry, stating a view briefly, holding it under gentle pushback.',
+      character: 'Group members discussing plans.',
+      opener: "[The group has just suggested splitting the project a certain way.]" },
+    { id: 'decline', title: 'Declining an Invitation Kindly', short: 'Saying no to plans', difficulty: 5, category: 'Social Events', emoji: '🫶',
+      summary: 'Saying no once clearly, keeping warmth, resisting over-apology.',
+      character: 'Close friend, a bit persistent.',
+      opener: "Heyyy — a bunch of us are going out Friday. You're in, right?" }
+  ];
+
+  // ---------- Demo roleplay flow (one scenario fully scripted) ----------
+  const DEMO_TURNS = {
+    coffee: [
+      { role: 'assistant', text: "Hi there, welcome in! What can I get started for you today?" },
+      { choices: [
+        { id: 'a', text: "Hi! Could I get a medium oat milk latte please?" },
+        { id: 'b', text: "Um, sorry, I'm not ready yet." },
+        { id: 'c', text: "Hi, what do you recommend?" }
+      ]},
+      { role: 'assistant', text: "A medium oat latte, coming right up. Anything else with that?" },
+      { choices: [
+        { id: 'a', text: "No thanks, that's it." },
+        { id: 'b', text: "Actually, could I add a small blueberry muffin?" }
+      ]},
+      { role: 'assistant', text: "Perfect — that'll be $6.75. Can I get a name for the order?" },
+      { choices: [
+        { id: 'a', text: "Sure, it's Alex." },
+        { id: 'b', text: "Oh, uh — Alex. Sorry!" }
+      ]},
+      { role: 'assistant', text: "Thanks Alex! I'll call you when it's ready." },
+      { role: 'system', text: "Nice work. That's a full interaction — you handled it well." }
+    ]
+  };
+
+  // ---------- Shared UI ----------
+  const Container = ({ children, className = '' }) => (
+    <div className={`device-frame bg-bg-light dark:bg-bg-dark text-ink-light dark:text-ink-dark flex flex-col ${className}`}>
+      {children}
+    </div>
+  );
+
+  const Screen = ({ children, className = '' }) => (
+    <div className={`flex-1 overflow-y-auto no-scrollbar fade-enter ${className}`}>
+      {children}
+    </div>
+  );
+
+  const TopBar = ({ title, onBack, right }) => (
+    <div className="flex items-center justify-between px-5 pt-6 pb-3">
+      <button
+        onClick={onBack}
+        className={`w-9 h-9 rounded-full flex items-center justify-center ${onBack ? 'bg-surface-light dark:bg-surface-dark shadow-soft' : 'opacity-0 pointer-events-none'}`}
+        aria-label="Back"
+      >
+        <Icon name="chevronLeft" />
+      </button>
+      <h1 className="text-base font-bold">{title}</h1>
+      <div className="w-9 h-9 flex items-center justify-center">{right}</div>
+    </div>
+  );
+
+  const Button = ({ children, variant = 'primary', onClick, className = '', disabled = false, full = true }) => {
+    const base = 'rounded-btn font-bold text-base py-4 px-5 transition active:scale-[0.98] disabled:opacity-50';
+    const styles = {
+      primary: 'bg-lilac-strong text-white',
+      secondary: 'bg-lilac-soft text-lilac-strong dark:bg-lilac/20 dark:text-lilac-dark',
+      ghost: 'bg-transparent text-ink-light dark:text-ink-dark',
+      danger: 'bg-crisis text-white'
+    };
+    return (
+      <button
+        onClick={onClick}
+        disabled={disabled}
+        className={`${base} ${styles[variant]} ${full ? 'w-full' : ''} ${className}`}
+      >
+        {children}
+      </button>
+    );
+  };
+
+  const Card = ({ children, className = '', onClick }) => (
+    <div
+      onClick={onClick}
+      className={`bg-surface-light dark:bg-surface-dark rounded-card shadow-soft dark:shadow-soft-dark p-4 ${onClick ? 'cursor-pointer active:scale-[0.99] transition' : ''} ${className}`}
+    >
+      {children}
+    </div>
+  );
+
+  const DifficultyDot = ({ level }) => (
+    <div className="flex gap-0.5">
+      {[1,2,3,4,5].map(i => (
+        <span key={i} className={`w-1.5 h-1.5 rounded-full ${i <= level ? 'bg-lilac' : 'bg-lilac-soft dark:bg-lilac/20'}`} />
+      ))}
+    </div>
+  );
+
+  const BottomNav = ({ current, onChange }) => {
+    const items = [
+      { id: 'home', icon: 'home', label: 'Home' },
+      { id: 'practice', icon: 'sparkle', label: 'Practice' },
+      { id: 'reminders', icon: 'bell', label: 'Reminders' },
+      { id: 'journal', icon: 'book', label: 'Journal' },
+      { id: 'me', icon: 'user', label: 'Me' }
+    ];
+    return (
+      <div className="bg-surface-light dark:bg-surface-dark border-t border-lilac-soft dark:border-ink-light/10 px-2 pt-2 pb-5 flex justify-around">
+        {items.map(it => (
+          <button
+            key={it.id}
+            onClick={() => onChange(it.id)}
+            className={`flex flex-col items-center gap-1 px-3 py-1 rounded-lg ${current === it.id ? 'text-lilac-strong dark:text-lilac-dark' : 'text-mute-light dark:text-mute-dark'}`}
+          >
+            <Icon name={it.icon} size={22}/>
+            <span className="text-[10px] font-semibold">{it.label}</span>
+          </button>
+        ))}
+      </div>
+    );
+  };
+
+  // Sticky "I'm not okay" button
+  const CrisisChip = ({ onClick }) => (
+    <button
+      onClick={onClick}
+      className="fixed sm:absolute bottom-24 right-4 z-30 bg-coral/90 text-ink-light rounded-full pl-3 pr-4 py-2 shadow-soft flex items-center gap-2 text-xs font-bold"
+      style={{ bottom: 96 }}
+    >
+      <Icon name="heart" size={16}/> I'm not okay
+    </button>
+  );
+
+  // ==============================================================
+  //  SCREENS
+  // ==============================================================
+
+  // ---------- Splash ----------
+  const Splash = ({ onNext }) => (
+    <Screen className="flex flex-col items-center justify-center gap-6 px-8 text-center">
+      <div className="pulse-slow"><Tulip size={180}/></div>
+      <div>
+        <h1 className="text-3xl font-extrabold text-ink-light dark:text-ink-dark">Astro</h1>
+        <p className="text-mute-light dark:text-mute-dark mt-1 text-sm">A kinder way to practice.</p>
+      </div>
+      <div className="w-full mt-6"><Button onClick={onNext}>Get started</Button></div>
+    </Screen>
+  );
+
+  // ---------- Welcome slides ----------
+  const Welcome = ({ onDone }) => {
+    const [idx, setIdx] = useState(0);
+    const slides = [
+      { hero: 'tulip',  mood: 'calm',  title: "Hey — welcome to Astro.", body: "A gentle space to practice the situations that feel hard." },
+      { hero: 'panda',  mood: 'listen', title: "Meet Momo.", body: "Your companion for roleplays, grounding, and small wins. Momo moves at your pace." },
+      { hero: 'panda',  mood: 'cheer', title: "Every tiny step is a win.", body: "Nothing here is graded. Just take the next small step." }
+    ];
+    const slide = slides[idx];
+    return (
+      <Screen className="flex flex-col items-center justify-between px-8 pt-12 pb-8 text-center">
+        <div className="flex flex-col items-center gap-6 mt-8">
+          {slide.hero === 'tulip'
+            ? <Tulip size={170}/>
+            : <Panda mood={slide.mood} size={160} />}
+          <h2 className="text-2xl font-extrabold">{slide.title}</h2>
+          <p className="text-mute-light dark:text-mute-dark text-base leading-relaxed">{slide.body}</p>
+        </div>
+        <div className="w-full flex flex-col items-center gap-4">
+          <div className="flex gap-2">
+            {slides.map((_, i) => (
+              <span key={i} className={`h-1.5 rounded-full transition-all ${i === idx ? 'w-6 bg-lilac-strong' : 'w-1.5 bg-lilac-soft'}`} />
+            ))}
+          </div>
+          <Button onClick={() => idx < slides.length - 1 ? setIdx(idx + 1) : onDone()}>
+            {idx < slides.length - 1 ? 'Next' : "Let's go"}
+          </Button>
+        </div>
+      </Screen>
+    );
+  };
+
+  // ---------- Account choice ----------
+  const AccountChoice = ({ onGuest, onSignUp, onSignIn }) => (
+    <Screen className="flex flex-col px-6 pt-10 pb-8">
+      <div className="flex flex-col items-center gap-4 text-center mb-8">
+        <Panda mood="calm" size={110}/>
+        <h2 className="text-2xl font-extrabold">How would you like to start?</h2>
+        <p className="text-mute-light dark:text-mute-dark text-sm">You can always change this later.</p>
+      </div>
+      <div className="flex flex-col gap-3 mt-auto">
+        <Button onClick={onGuest}>Continue as guest</Button>
+        <Button variant="secondary" onClick={onSignUp}>Sign up with email</Button>
+        <button onClick={onSignIn} className="text-sm text-mute-light dark:text-mute-dark py-2 font-semibold">Already have an account? Sign in</button>
+      </div>
+    </Screen>
+  );
+
+  const GuestConfirm = ({ onContinue, onBack }) => (
+    <Container>
+      <TopBar onBack={onBack}/>
+      <Screen className="flex flex-col items-center text-center px-6 gap-5">
+        <Panda mood="listen" size={130}/>
+        <h2 className="text-2xl font-extrabold">Guest mode — you're good to go.</h2>
+        <p className="text-mute-light dark:text-mute-dark text-base leading-relaxed">
+          Your practice and journal stay on this device. You can make an account anytime to back things up — no pressure.
+        </p>
+        <div className="bg-lilac-soft dark:bg-lilac/10 p-4 rounded-card text-sm w-full text-left flex gap-3 items-start">
+          <div className="mt-0.5"><Icon name="lock" size={18}/></div>
+          <p>Nothing you type here is shared with anyone. Only you see your journal.</p>
+        </div>
+        <div className="w-full mt-auto"><Button onClick={onContinue}>Continue</Button></div>
+      </Screen>
+    </Container>
+  );
+
+  // ---------- Onboarding ----------
+  const Onboarding = ({ onDone }) => {
+    const [step, setStep] = useState(0);
+    const [age, setAge] = useState(null);
+    const [selected, setSelected] = useState(new Set());
+    const [reminderPref, setReminderPref] = useState('balanced');
+
+    const toggle = (id) => {
+      const s = new Set(selected);
+      s.has(id) ? s.delete(id) : s.add(id);
+      setSelected(s);
+    };
+
+    const ageOptions = ['13–17', '18–24', '25–34', '35 or older', 'Prefer not to say'];
+    const remOptions = [
+      { id: 'gentle', title: 'Gentle', body: 'One nudge the day of.' },
+      { id: 'balanced', title: 'Balanced', body: 'A day before, an hour before, and after.' },
+      { id: 'full', title: 'Full support', body: 'Extra check-ins through the day.' }
+    ];
+
+    return (
+      <Container>
+        <TopBar
+          title={`Step ${step + 1} of 3`}
+          onBack={step > 0 ? () => setStep(step - 1) : undefined}
+        />
+        <Screen className="px-6 pb-6 flex flex-col gap-5">
+          {step === 0 && (
+            <>
+              <h2 className="text-2xl font-extrabold mt-2">Which age range fits you?</h2>
+              <p className="text-mute-light dark:text-mute-dark text-sm">This just helps us suggest the right scenarios.</p>
+              <div className="flex flex-col gap-2 mt-2">
+                {ageOptions.map(a => (
+                  <button
+                    key={a}
+                    onClick={() => setAge(a)}
+                    className={`text-left p-4 rounded-card border-2 font-semibold transition ${age === a ? 'border-lilac-strong bg-lilac-soft dark:bg-lilac/10' : 'border-transparent bg-surface-light dark:bg-surface-dark'}`}
+                  >
+                    {a}
+                  </button>
+                ))}
+              </div>
+              <div className="mt-auto pt-4"><Button disabled={!age} onClick={() => setStep(1)}>Next</Button></div>
+            </>
+          )}
+
+          {step === 1 && (
+            <>
+              <h2 className="text-2xl font-extrabold mt-2">What feels hardest right now?</h2>
+              <p className="text-mute-light dark:text-mute-dark text-sm">Pick as many as apply. We'll start your library here.</p>
+              <div className="flex flex-col gap-2 mt-2">
+                {SCENARIOS.map(s => {
+                  const on = selected.has(s.id);
+                  return (
+                    <button
+                      key={s.id}
+                      onClick={() => toggle(s.id)}
+                      className={`text-left p-4 rounded-card border-2 flex items-center gap-3 transition ${on ? 'border-lilac-strong bg-lilac-soft dark:bg-lilac/10' : 'border-transparent bg-surface-light dark:bg-surface-dark'}`}
+                    >
+                      <span className="text-2xl">{s.emoji}</span>
+                      <div className="flex-1">
+                        <p className="font-bold text-sm">{s.short}</p>
+                        <p className="text-xs text-mute-light dark:text-mute-dark">{s.category}</p>
+                      </div>
+                      <div className={`w-5 h-5 rounded-full flex items-center justify-center ${on ? 'bg-lilac-strong text-white' : 'bg-lilac-soft dark:bg-ink-light/10'}`}>
+                        {on && <Icon name="check" size={14}/>}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="pt-4 sticky bottom-0 bg-bg-light dark:bg-bg-dark">
+                <Button onClick={() => setStep(2)}>{selected.size === 0 ? 'Skip for now' : `Next (${selected.size} selected)`}</Button>
+              </div>
+            </>
+          )}
+
+          {step === 2 && (
+            <>
+              <h2 className="text-2xl font-extrabold mt-2">How should reminders feel?</h2>
+              <p className="text-mute-light dark:text-mute-dark text-sm">We'll ping you before and after real situations you schedule.</p>
+              <div className="flex flex-col gap-2 mt-2">
+                {remOptions.map(r => (
+                  <button
+                    key={r.id}
+                    onClick={() => setReminderPref(r.id)}
+                    className={`text-left p-4 rounded-card border-2 transition ${reminderPref === r.id ? 'border-lilac-strong bg-lilac-soft dark:bg-lilac/10' : 'border-transparent bg-surface-light dark:bg-surface-dark'}`}
+                  >
+                    <p className="font-bold">{r.title}</p>
+                    <p className="text-sm text-mute-light dark:text-mute-dark">{r.body}</p>
+                  </button>
+                ))}
+              </div>
+              <div className="mt-auto pt-4"><Button onClick={onDone}>All set — take me in</Button></div>
+            </>
+          )}
+        </Screen>
+      </Container>
+    );
+  };
+
+  // ---------- Home ----------
+  const Home = ({ go, nav, setNav, onCrisis }) => {
+    const suggested = SCENARIOS[0];
+    const [mood, setMood] = useState(null);
+    return (
+      <Container>
+        <div className="flex items-center justify-between px-5 pt-6 pb-2">
+          <div className="flex items-center gap-2">
+            <TulipMark size={28}/>
+            <span className="font-extrabold text-lg tracking-tight">Astro</span>
+          </div>
+          <button onClick={() => go('settings')} className="w-10 h-10 rounded-full bg-surface-light dark:bg-surface-dark flex items-center justify-center shadow-soft">
+            <Icon name="settings" size={18}/>
+          </button>
+        </div>
+        <div className="px-5 pb-2">
+          <p className="text-xs text-mute-light dark:text-mute-dark">Wednesday, April 22</p>
+          <h1 className="text-2xl font-extrabold">Hi, friend 🌿</h1>
+        </div>
+
+        <Screen className="px-5 pb-4 flex flex-col gap-4">
+          {/* mascot + greeting card */}
+          <Card className="bg-gradient-to-br from-lilac-soft to-sky-soft dark:from-lilac/10 dark:to-sky/10 flex items-center gap-3">
+            <Panda mood="calm" size={72}/>
+            <div className="flex-1">
+              <p className="font-bold">No pressure today.</p>
+              <p className="text-sm text-mute-light dark:text-mute-dark">Just looking around is a win.</p>
+            </div>
+          </Card>
+
+          {/* Mood check-in */}
+          <div>
+            <p className="font-bold mb-2">How's right now feeling?</p>
+            <div className="grid grid-cols-5 gap-2">
+              {['😣','😟','😐','🙂','😌'].map((e, i) => (
+                <button
+                  key={i}
+                  onClick={() => setMood(i)}
+                  className={`aspect-square rounded-card text-2xl flex items-center justify-center transition ${mood === i ? 'bg-lilac-strong text-white' : 'bg-surface-light dark:bg-surface-dark'}`}
+                >{e}</button>
+              ))}
+            </div>
+          </div>
+
+          {/* Suggested practice */}
+          <div>
+            <p className="font-bold mb-2">Suggested for today</p>
+            <Card onClick={() => go('scenario', { id: suggested.id })} className="flex items-center gap-3">
+              <div className="text-3xl">{suggested.emoji}</div>
+              <div className="flex-1">
+                <p className="font-bold">{suggested.title}</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <DifficultyDot level={suggested.difficulty}/>
+                  <p className="text-xs text-mute-light dark:text-mute-dark">{suggested.category}</p>
+                </div>
+              </div>
+              <Icon name="chevronRight"/>
+            </Card>
+          </div>
+
+          {/* Upcoming reminder */}
+          <div>
+            <p className="font-bold mb-2">Coming up</p>
+            <Card onClick={() => setNav('reminders')} className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-sage-soft dark:bg-sage/20 flex items-center justify-center text-sage-strong dark:text-sage-dark">
+                <Icon name="clock" size={18}/>
+              </div>
+              <div className="flex-1">
+                <p className="font-bold">Dinner with friends</p>
+                <p className="text-xs text-mute-light dark:text-mute-dark">Friday, 7:00 PM</p>
+              </div>
+              <Icon name="chevronRight"/>
+            </Card>
+          </div>
+
+          {/* quick actions */}
+          <div>
+            <p className="font-bold mb-2">Quick help</p>
+            <div className="grid grid-cols-2 gap-3">
+              <Card onClick={() => go('breathing')} className="flex flex-col gap-2">
+                <div className="w-10 h-10 rounded-full bg-sky-soft dark:bg-sky/20 flex items-center justify-center text-sky-strong dark:text-sky-dark"><Icon name="wind" size={18}/></div>
+                <p className="font-bold">Grounding</p>
+                <p className="text-xs text-mute-light dark:text-mute-dark">60-second exercise</p>
+              </Card>
+              <Card onClick={() => setNav('journal')} className="flex flex-col gap-2">
+                <div className="w-10 h-10 rounded-full bg-lilac-soft dark:bg-lilac/20 flex items-center justify-center text-lilac-strong dark:text-lilac-dark"><Icon name="book" size={18}/></div>
+                <p className="font-bold">Wins journal</p>
+                <p className="text-xs text-mute-light dark:text-mute-dark">Note one thing.</p>
+              </Card>
+            </div>
+          </div>
+        </Screen>
+
+        <CrisisChip onClick={onCrisis}/>
+        <BottomNav current={nav} onChange={setNav}/>
+      </Container>
+    );
+  };
+
+  // ---------- Practice (scenarios list) ----------
+  const Practice = ({ go, nav, setNav, onCrisis }) => {
+    const [filter, setFilter] = useState('All');
+    const cats = ['All', ...Array.from(new Set(SCENARIOS.map(s => s.category)))];
+    const list = filter === 'All' ? SCENARIOS : SCENARIOS.filter(s => s.category === filter);
+    return (
+      <Container>
+        <TopBar title="Practice" right={<Icon name="sparkle" size={18}/>}/>
+        <div className="px-5 pb-3 flex gap-2 overflow-x-auto no-scrollbar">
+          {cats.map(c => (
+            <button
+              key={c}
+              onClick={() => setFilter(c)}
+              className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap ${filter === c ? 'bg-lilac-strong text-white' : 'bg-surface-light dark:bg-surface-dark text-mute-light dark:text-mute-dark'}`}
+            >{c}</button>
+          ))}
+        </div>
+        <Screen className="px-5 pb-4 flex flex-col gap-3">
+          {list.map(s => (
+            <Card key={s.id} onClick={() => go('scenario', { id: s.id })} className="flex items-center gap-3">
+              <div className="text-3xl">{s.emoji}</div>
+              <div className="flex-1">
+                <p className="font-bold">{s.title}</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <DifficultyDot level={s.difficulty}/>
+                  <p className="text-xs text-mute-light dark:text-mute-dark">{s.category}</p>
+                </div>
+              </div>
+              <Icon name="chevronRight"/>
+            </Card>
+          ))}
+        </Screen>
+        <CrisisChip onClick={onCrisis}/>
+        <BottomNav current={nav} onChange={setNav}/>
+      </Container>
+    );
+  };
+
+  // ---------- Scenario detail ----------
+  const ScenarioDetail = ({ id, onBack, go }) => {
+    const s = SCENARIOS.find(x => x.id === id) || SCENARIOS[0];
+    return (
+      <Container>
+        <TopBar onBack={onBack}/>
+        <Screen className="px-6 pb-6 flex flex-col gap-5">
+          <div className="flex flex-col items-center text-center gap-3">
+            <div className="text-5xl">{s.emoji}</div>
+            <h2 className="text-2xl font-extrabold">{s.title}</h2>
+            <div className="flex items-center gap-2">
+              <DifficultyDot level={s.difficulty}/>
+              <span className="text-xs text-mute-light dark:text-mute-dark">{s.category}</span>
+            </div>
+          </div>
+          <Card>
+            <p className="text-xs font-bold text-mute-light dark:text-mute-dark uppercase tracking-wide mb-1">You'll practice</p>
+            <p className="text-sm leading-relaxed">{s.summary}</p>
+          </Card>
+          <Card>
+            <p className="text-xs font-bold text-mute-light dark:text-mute-dark uppercase tracking-wide mb-1">Who you'll meet</p>
+            <p className="text-sm leading-relaxed">{s.character}</p>
+          </Card>
+          {s.id === 'coffee' && (
+            <Card className="bg-sage-soft dark:bg-sage/10">
+              <p className="text-sm">💡 This one's our walkthrough demo — the full roleplay is clickable end-to-end.</p>
+            </Card>
+          )}
+          <div className="mt-auto">
+            <Button onClick={() => go('prep', { id: s.id })}>Start prep</Button>
+          </div>
+        </Screen>
+      </Container>
+    );
+  };
+
+  // ---------- Prep flow ----------
+  const Prep = ({ id, onBack, go }) => {
+    const s = SCENARIOS.find(x => x.id === id) || SCENARIOS[0];
+    const [step, setStep] = useState(0);
+    const [breath, setBreath] = useState('in');
+    const [preRating, setPreRating] = useState(null);
+
+    useEffect(() => {
+      if (step !== 0) return;
+      const t = setInterval(() => setBreath(b => b === 'in' ? 'hold' : b === 'hold' ? 'out' : 'in'), 3000);
+      return () => clearInterval(t);
+    }, [step]);
+
+    const nextStep = () => step < 2 ? setStep(step + 1) : go('roleplay', { id: s.id });
+    return (
+      <Container>
+        <TopBar title={`Prep · Step ${step + 1}/3`} onBack={step > 0 ? () => setStep(step - 1) : onBack}/>
+        <Screen className="px-6 pb-6 flex flex-col gap-5">
+          {step === 0 && (
+            <div className="flex flex-col items-center text-center gap-4 flex-1 justify-center">
+              <p className="text-xs uppercase tracking-wide font-bold text-mute-light dark:text-mute-dark">Ground yourself</p>
+              <h2 className="text-2xl font-extrabold">Let's breathe for a moment.</h2>
+              <div className="relative flex items-center justify-center h-48 w-48">
+                <div className={`absolute rounded-full bg-lilac-soft transition-all duration-[3000ms] ${breath === 'in' ? 'w-44 h-44' : breath === 'hold' ? 'w-44 h-44' : 'w-24 h-24'}`}/>
+                <p className="relative font-bold text-lg capitalize">
+                  {breath === 'in' ? 'Breathe in' : breath === 'hold' ? 'Hold' : 'Breathe out'}
+                </p>
+              </div>
+              <p className="text-sm text-mute-light dark:text-mute-dark">Three rounds is plenty. No rush.</p>
+              <div className="w-full mt-4"><Button onClick={nextStep}>I'm ready</Button></div>
+            </div>
+          )}
+          {step === 1 && (
+            <>
+              <p className="text-xs uppercase tracking-wide font-bold text-mute-light dark:text-mute-dark">A small script</p>
+              <h2 className="text-2xl font-extrabold">Here's a starting line.</h2>
+              <Card className="bg-lilac-soft dark:bg-lilac/10">
+                <p className="font-bold text-lg">"{getScript(s.id)}"</p>
+              </Card>
+              <p className="text-sm text-mute-light dark:text-mute-dark">You don't have to say it word-for-word. It's a starting point.</p>
+              <div className="mt-auto"><Button onClick={nextStep}>Next</Button></div>
+            </>
+          )}
+          {step === 2 && (
+            <>
+              <p className="text-xs uppercase tracking-wide font-bold text-mute-light dark:text-mute-dark">Check in</p>
+              <h2 className="text-2xl font-extrabold">How anxious does this feel right now?</h2>
+              <p className="text-sm text-mute-light dark:text-mute-dark">1 is calm, 10 is overwhelming.</p>
+              <div className="grid grid-cols-5 gap-2 mt-2">
+                {[1,2,3,4,5,6,7,8,9,10].map(n => (
+                  <button
+                    key={n}
+                    onClick={() => setPreRating(n)}
+                    className={`aspect-square rounded-card font-bold text-lg transition ${preRating === n ? 'bg-lilac-strong text-white' : 'bg-surface-light dark:bg-surface-dark'}`}
+                  >{n}</button>
+                ))}
+              </div>
+              <div className="mt-auto"><Button disabled={preRating === null} onClick={nextStep}>Start roleplay</Button></div>
+            </>
+          )}
+        </Screen>
+      </Container>
+    );
+  };
+  function getScript(id) {
+    const scripts = {
+      coffee: "Hi, could I get a medium oat latte please?",
+      directions: "Excuse me — sorry to bother you, do you know how to get to the library?",
+      menu: "Hi! Sorry, quick question — is the pasta dairy-free?",
+      'phone-appt': "Hi, I'm calling to book a new patient appointment.",
+      return: "Hi, I'd like to return this — it didn't quite work out.",
+      professor: "Hey Professor — do you have a minute? I had a quick question about today's lecture.",
+      smalltalk: "Hey! Pretty good. How about you?",
+      party: "Hey, mind if I jump in? I love that show too.",
+      meeting: "Can I add something? I'd suggest we split it a bit differently.",
+      decline: "That sounds fun! I'm gonna sit this one out — have the best time."
+    };
+    return scripts[id] || "Let's give it a try.";
+  }
+
+  // ---------- Roleplay ----------
+  const Roleplay = ({ id, onBack, go }) => {
+    const s = SCENARIOS.find(x => x.id === id) || SCENARIOS[0];
+    const turns = DEMO_TURNS[id] || [
+      { role: 'assistant', text: s.opener },
+      { choices: [
+        { id: 'a', text: '(type your response in the full app)' }
+      ]},
+      { role: 'system', text: "This scenario is available as a full demo in scenario #1 (Coffee). The others will open up with LLM-powered replies in the real build." }
+    ];
+    const [cursor, setCursor] = useState(0);
+    const [messages, setMessages] = useState([]);
+    const [typing, setTyping] = useState(false);
+    const scrollRef = useRef(null);
+
+    useEffect(() => {
+      // push next AI/system message if at one
+      const step = turns[cursor];
+      if (!step) return;
+      if (step.role === 'assistant' || step.role === 'system') {
+        setTyping(true);
+        const t = setTimeout(() => {
+          setMessages(m => [...m, step]);
+          setTyping(false);
+          setCursor(c => c + 1);
+        }, 900);
+        return () => clearTimeout(t);
+      }
+    }, [cursor]);
+
+    useEffect(() => {
+      if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }, [messages, typing]);
+
+    const current = turns[cursor];
+    const isChoice = current && current.choices;
+    const isDone = !current;
+
+    const pickChoice = (c) => {
+      setMessages(m => [...m, { role: 'user', text: c.text }]);
+      setCursor(x => x + 1);
+    };
+
+    return (
+      <Container>
+        <div className="flex items-center justify-between px-5 pt-6 pb-3 border-b border-lilac-soft dark:border-ink-light/10">
+          <button onClick={onBack} className="w-9 h-9 rounded-full flex items-center justify-center bg-surface-light dark:bg-surface-dark shadow-soft"><Icon name="chevronLeft"/></button>
+          <div className="flex items-center gap-2">
+            <div className="text-2xl">{s.emoji}</div>
+            <div className="text-center">
+              <p className="text-sm font-bold">{s.short}</p>
+              <p className="text-[10px] text-mute-light dark:text-mute-dark">{s.character}</p>
+            </div>
+          </div>
+          <button onClick={onBack} className="w-9 h-9 rounded-full flex items-center justify-center bg-surface-light dark:bg-surface-dark shadow-soft"><Icon name="x" size={18}/></button>
+        </div>
+
+        <div ref={scrollRef} className="flex-1 overflow-y-auto no-scrollbar px-4 py-4 flex flex-col gap-3">
+          {messages.map((m, i) => {
+            if (m.role === 'system') return (
+              <div key={i} className="self-center bg-sage-soft dark:bg-sage/20 text-sage-strong dark:text-sage-dark text-sm font-semibold px-4 py-2 rounded-full">{m.text}</div>
+            );
+            const mine = m.role === 'user';
+            return (
+              <div key={i} className={`flex ${mine ? 'justify-end' : 'justify-start'} gap-2 items-end`}>
+                {!mine && <Panda mood="listen" size={32}/>}
+                <div className={`max-w-[78%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${mine ? 'bg-lilac-strong text-white rounded-br-sm' : 'bg-surface-light dark:bg-surface-dark rounded-bl-sm'}`}>
+                  {m.text}
+                </div>
+              </div>
+            );
+          })}
+          {typing && (
+            <div className="flex items-end gap-2">
+              <Panda mood="listen" size={32}/>
+              <div className="bg-surface-light dark:bg-surface-dark px-4 py-3 rounded-2xl rounded-bl-sm flex gap-1">
+                <span className="typing-dot w-1.5 h-1.5 rounded-full bg-mute-light dark:bg-mute-dark"/>
+                <span className="typing-dot w-1.5 h-1.5 rounded-full bg-mute-light dark:bg-mute-dark"/>
+                <span className="typing-dot w-1.5 h-1.5 rounded-full bg-mute-light dark:bg-mute-dark"/>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="px-4 pt-2 pb-5 bg-surface-light/50 dark:bg-surface-dark/30 border-t border-lilac-soft dark:border-ink-light/10">
+          {isChoice && (
+            <div className="flex flex-col gap-2">
+              <p className="text-[11px] uppercase tracking-wide font-bold text-mute-light dark:text-mute-dark px-1">Tap a reply to continue</p>
+              {current.choices.map(c => (
+                <button
+                  key={c.id}
+                  onClick={() => pickChoice(c)}
+                  className="text-left p-3 rounded-card bg-lilac-soft dark:bg-lilac/10 text-sm font-semibold active:scale-[0.99]"
+                >{c.text}</button>
+              ))}
+            </div>
+          )}
+          {isDone && (
+            <Button onClick={() => go('reflection', { id: s.id })}>Finish & reflect</Button>
+          )}
+          {!isChoice && !isDone && !typing && (
+            <p className="text-xs text-center text-mute-light dark:text-mute-dark">…</p>
+          )}
+        </div>
+      </Container>
+    );
+  };
+
+  // ---------- Reflection ----------
+  const Reflection = ({ id, onDone }) => {
+    const [postRating, setPostRating] = useState(null);
+    const [win, setWin] = useState('');
+    const s = SCENARIOS.find(x => x.id === id) || SCENARIOS[0];
+    return (
+      <Container>
+        <TopBar title="Reflection"/>
+        <Screen className="px-6 pb-6 flex flex-col gap-5">
+          <div className="flex flex-col items-center gap-3 text-center">
+            <Panda mood="cheer" size={120}/>
+            <h2 className="text-2xl font-extrabold">That took courage.</h2>
+            <p className="text-sm text-mute-light dark:text-mute-dark">Let's notice something before we close out.</p>
+          </div>
+          <div>
+            <p className="font-bold mb-2">How anxious does it feel now?</p>
+            <div className="grid grid-cols-5 gap-2">
+              {[1,2,3,4,5,6,7,8,9,10].map(n => (
+                <button
+                  key={n}
+                  onClick={() => setPostRating(n)}
+                  className={`aspect-square rounded-card font-bold text-lg transition ${postRating === n ? 'bg-lilac-strong text-white' : 'bg-surface-light dark:bg-surface-dark'}`}
+                >{n}</button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <p className="font-bold mb-2">One thing that went okay?</p>
+            <textarea
+              value={win}
+              onChange={e => setWin(e.target.value)}
+              placeholder="Even something small — 'I asked for oat milk without stumbling.'"
+              className="w-full min-h-[100px] rounded-card p-4 bg-surface-light dark:bg-surface-dark text-sm resize-none outline-none focus:ring-2 focus:ring-lilac"
+            />
+          </div>
+          <div className="mt-auto"><Button onClick={onDone}>Save to journal</Button></div>
+        </Screen>
+      </Container>
+    );
+  };
+
+  // ---------- Reminders ----------
+  const Reminders = ({ go, nav, setNav, onCrisis }) => {
+    const items = [
+      { label: 'Dinner with friends', when: 'Friday · 7:00 PM', scenario: 'smalltalk' },
+      { label: 'Call the dentist', when: 'Thursday · 10:30 AM', scenario: 'phone-appt' }
+    ];
+    return (
+      <Container>
+        <TopBar title="Reminders" right={<button onClick={() => go('addReminder')} className="w-8 h-8 rounded-full bg-lilac-strong text-white flex items-center justify-center"><Icon name="plus" size={16}/></button>}/>
+        <Screen className="px-5 pb-4 flex flex-col gap-3">
+          <Card className="bg-gradient-to-br from-sky-soft to-sage-soft dark:from-sky/10 dark:to-sage/10">
+            <p className="font-bold mb-1">Schedule anything real.</p>
+            <p className="text-sm text-mute-light dark:text-mute-dark">We'll ping you before, during prep, and after — with the right practice at each step.</p>
+          </Card>
+          {items.map((it, i) => (
+            <Card key={i} className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-sage-soft dark:bg-sage/20 flex items-center justify-center text-sage-strong dark:text-sage-dark">
+                <Icon name="clock" size={18}/>
+              </div>
+              <div className="flex-1">
+                <p className="font-bold">{it.label}</p>
+                <p className="text-xs text-mute-light dark:text-mute-dark">{it.when}</p>
+              </div>
+              <button onClick={() => go('scenario', { id: it.scenario })} className="text-xs font-bold text-lilac-strong dark:text-lilac-dark">Prep</button>
+            </Card>
+          ))}
+        </Screen>
+        <CrisisChip onClick={onCrisis}/>
+        <BottomNav current={nav} onChange={setNav}/>
+      </Container>
+    );
+  };
+
+  const AddReminder = ({ onBack, onSave }) => {
+    const [label, setLabel] = useState('');
+    const [date, setDate] = useState('');
+    const [time, setTime] = useState('');
+    return (
+      <Container>
+        <TopBar title="New reminder" onBack={onBack}/>
+        <Screen className="px-6 pb-6 flex flex-col gap-4">
+          <div>
+            <label className="text-xs font-bold text-mute-light dark:text-mute-dark uppercase">What's happening?</label>
+            <input value={label} onChange={e => setLabel(e.target.value)} placeholder="Dinner with friends" className="w-full mt-1 p-3 rounded-btn bg-surface-light dark:bg-surface-dark outline-none focus:ring-2 focus:ring-lilac"/>
+          </div>
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <label className="text-xs font-bold text-mute-light dark:text-mute-dark uppercase">Date</label>
+              <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full mt-1 p-3 rounded-btn bg-surface-light dark:bg-surface-dark outline-none"/>
+            </div>
+            <div className="flex-1">
+              <label className="text-xs font-bold text-mute-light dark:text-mute-dark uppercase">Time</label>
+              <input type="time" value={time} onChange={e => setTime(e.target.value)} className="w-full mt-1 p-3 rounded-btn bg-surface-light dark:bg-surface-dark outline-none"/>
+            </div>
+          </div>
+          <div>
+            <label className="text-xs font-bold text-mute-light dark:text-mute-dark uppercase">Related practice</label>
+            <div className="grid grid-cols-2 gap-2 mt-2">
+              {SCENARIOS.slice(0,4).map(s => (
+                <button key={s.id} className="p-3 rounded-card bg-surface-light dark:bg-surface-dark text-left text-sm font-semibold flex items-center gap-2">
+                  <span className="text-lg">{s.emoji}</span>{s.short}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="mt-auto"><Button onClick={onSave}>Save reminder</Button></div>
+        </Screen>
+      </Container>
+    );
+  };
+
+  // ---------- Journal ----------
+  const Journal = ({ go, nav, setNav, onCrisis }) => {
+    const entries = [
+      { date: 'Today', title: "I ordered coffee.", body: "I asked for oat milk without stumbling. The barista smiled.", tag: 'Coffee'},
+      { date: 'Yesterday', title: "Called the dentist.", body: "Put on hold for 2 min. Stayed on the line.", tag: 'Phone call'}
+    ];
+    return (
+      <Container>
+        <TopBar title="Journal" right={<button onClick={() => go('journalNew')} className="w-8 h-8 rounded-full bg-lilac-strong text-white flex items-center justify-center"><Icon name="plus" size={16}/></button>}/>
+        <Screen className="px-5 pb-4 flex flex-col gap-3">
+          <Card className="bg-gradient-to-br from-lilac-soft to-sage-soft dark:from-lilac/10 dark:to-sage/10">
+            <p className="font-bold mb-1">Wins journal</p>
+            <p className="text-sm text-mute-light dark:text-mute-dark">Small wins only — no pressure to perform.</p>
+          </Card>
+          {entries.map((e, i) => (
+            <Card key={i}>
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-full bg-pinkSoft flex items-center justify-center" style={{ background: '#FBEEF4' }}>
+                  <TulipMark size={22}/>
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <p className="font-bold">{e.title}</p>
+                    <span className="text-[10px] uppercase font-bold text-mute-light dark:text-mute-dark">{e.date}</span>
+                  </div>
+                  <p className="text-sm text-mute-light dark:text-mute-dark mt-1">{e.body}</p>
+                  <span className="mt-2 inline-block text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-lilac-soft dark:bg-lilac/20 text-lilac-strong dark:text-lilac-dark">{e.tag}</span>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </Screen>
+        <CrisisChip onClick={onCrisis}/>
+        <BottomNav current={nav} onChange={setNav}/>
+      </Container>
+    );
+  };
+
+  const JournalNew = ({ onBack, onSave }) => {
+    const [title, setTitle] = useState('');
+    const [body, setBody] = useState('');
+    return (
+      <Container>
+        <TopBar title="New entry" onBack={onBack}/>
+        <Screen className="px-6 pb-6 flex flex-col gap-4">
+          <input value={title} onChange={e => setTitle(e.target.value)} placeholder="One small thing I did…" className="p-3 rounded-btn bg-surface-light dark:bg-surface-dark outline-none font-bold text-lg"/>
+          <textarea value={body} onChange={e => setBody(e.target.value)} placeholder="What happened? How did it feel?" className="min-h-[200px] p-3 rounded-btn bg-surface-light dark:bg-surface-dark outline-none resize-none"/>
+          <div className="mt-auto"><Button onClick={onSave}>Save</Button></div>
+        </Screen>
+      </Container>
+    );
+  };
+
+  // ---------- Me / Settings ----------
+  const Me = ({ go, nav, setNav, dark, setDark, onCrisis }) => (
+    <Container>
+      <TopBar title="Me"/>
+      <Screen className="px-5 pb-6 flex flex-col gap-3">
+        <Card className="flex items-center gap-3">
+          <Panda mood="cheer" size={56}/>
+          <div className="flex-1">
+            <p className="font-bold">Guest</p>
+            <p className="text-xs text-mute-light dark:text-mute-dark">Sessions stay on this device.</p>
+          </div>
+          <button className="text-xs font-bold text-lilac-strong dark:text-lilac-dark">Upgrade</button>
+        </Card>
+
+        <div>
+          <p className="text-xs font-bold uppercase text-mute-light dark:text-mute-dark mt-3 mb-2 px-1">Your streak</p>
+          <Card className="flex items-center justify-between">
+            <div>
+              <p className="font-bold">3 gentle days</p>
+              <p className="text-xs text-mute-light dark:text-mute-dark">No-pressure streaks. Missed days don't reset you.</p>
+            </div>
+            <div className="text-3xl">🌱</div>
+          </Card>
+        </div>
+
+        <div>
+          <p className="text-xs font-bold uppercase text-mute-light dark:text-mute-dark mt-3 mb-2 px-1">Settings</p>
+          <Card className="divide-y divide-lilac-soft dark:divide-ink-light/10 p-0">
+            <button onClick={() => setDark(!dark)} className="w-full p-4 flex items-center gap-3 text-left">
+              <Icon name={dark ? 'sun' : 'moon'} size={18}/>
+              <span className="flex-1 font-semibold">{dark ? 'Light mode' : 'Dark mode'}</span>
+              <span className="text-xs text-mute-light dark:text-mute-dark">{dark ? 'On' : 'Off'}</span>
+            </button>
+            <button className="w-full p-4 flex items-center gap-3 text-left">
+              <Icon name="shield" size={18}/>
+              <span className="flex-1 font-semibold">Privacy & data</span>
+              <Icon name="chevronRight" size={16}/>
+            </button>
+            <button onClick={onCrisis} className="w-full p-4 flex items-center gap-3 text-left">
+              <Icon name="heart" size={18}/>
+              <span className="flex-1 font-semibold">Crisis resources</span>
+              <Icon name="chevronRight" size={16}/>
+            </button>
+            <button className="w-full p-4 flex items-center gap-3 text-left">
+              <Icon name="trash" size={18}/>
+              <span className="flex-1 font-semibold">Delete my data</span>
+              <Icon name="chevronRight" size={16}/>
+            </button>
+          </Card>
+        </div>
+
+        <p className="text-[11px] text-center text-mute-light dark:text-mute-dark mt-2">Astro is a supportive tool, not therapy or a medical device.</p>
+      </Screen>
+      <BottomNav current={nav} onChange={setNav}/>
+    </Container>
+  );
+
+  // ---------- Crisis resources ----------
+  const Crisis = ({ onBack }) => (
+    <Container>
+      <div className="bg-crisis text-white px-6 pt-6 pb-8 rounded-b-[32px]">
+        <button onClick={onBack} className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center mb-4"><Icon name="chevronLeft"/></button>
+        <h2 className="text-2xl font-extrabold mb-2">You're not alone right now.</h2>
+        <p className="text-sm opacity-90">Reach a human. These lines are free and open 24/7.</p>
+      </div>
+      <Screen className="px-5 pt-4 pb-6 flex flex-col gap-3">
+        <Card className="flex items-center gap-3">
+          <div className="w-11 h-11 rounded-full bg-coral/30 flex items-center justify-center"><Icon name="phone"/></div>
+          <div className="flex-1">
+            <p className="font-bold">988 Suicide & Crisis Lifeline</p>
+            <p className="text-xs text-mute-light dark:text-mute-dark">Call or text 988 · US & Canada</p>
+          </div>
+        </Card>
+        <Card className="flex items-center gap-3">
+          <div className="w-11 h-11 rounded-full bg-coral/30 flex items-center justify-center"><Icon name="phone"/></div>
+          <div className="flex-1">
+            <p className="font-bold">Crisis Text Line</p>
+            <p className="text-xs text-mute-light dark:text-mute-dark">Text HOME to 741741</p>
+          </div>
+        </Card>
+        <Card className="flex items-center gap-3">
+          <div className="w-11 h-11 rounded-full bg-coral/30 flex items-center justify-center"><Icon name="phone"/></div>
+          <div className="flex-1">
+            <p className="font-bold">Emergency services</p>
+            <p className="text-xs text-mute-light dark:text-mute-dark">911 · if you or someone else is in immediate danger</p>
+          </div>
+        </Card>
+        <Card className="bg-sage-soft dark:bg-sage/20">
+          <p className="font-bold mb-1">Or just breathe with me.</p>
+          <p className="text-sm">A 60-second grounding exercise is always available on the home tab.</p>
+        </Card>
+      </Screen>
+    </Container>
+  );
+
+  const Breathing = ({ onBack }) => {
+    // stages: 'setup' | 'running' | 'done'
+    const [stage, setStage] = useState('setup');
+    const [targetRounds, setTargetRounds] = useState(3);
+    const [phase, setPhase] = useState('in');
+    const [phaseCount, setPhaseCount] = useState(0); // counts every phase tick
+
+    // Start running
+    const start = () => {
+      setPhase('in');
+      setPhaseCount(0);
+      setStage('running');
+    };
+
+    // Phase cycle: in → hold → out; each phase = 3s; one round = 3 phases
+    useEffect(() => {
+      if (stage !== 'running') return;
+      const t = setInterval(() => {
+        setPhaseCount(c => {
+          const next = c + 1;
+          const roundsCompleted = Math.floor(next / 3);
+          if (roundsCompleted >= targetRounds) {
+            setStage('done');
+            return next;
+          }
+          return next;
+        });
+        setPhase(p => p === 'in' ? 'hold' : p === 'hold' ? 'out' : 'in');
+      }, 3000);
+      return () => clearInterval(t);
+    }, [stage, targetRounds]);
+
+    const currentRound = Math.min(Math.floor(phaseCount / 3) + 1, targetRounds);
+
+    return (
+      <Container>
+        <TopBar title="Grounding" onBack={onBack}/>
+
+        {stage === 'setup' && (
+          <Screen className="px-6 pb-6 flex flex-col gap-5">
+            <div className="flex flex-col items-center text-center gap-3 mt-4">
+              <Panda mood="breathing" size={130}/>
+              <h2 className="text-2xl font-extrabold">How many rounds?</h2>
+              <p className="text-sm text-mute-light dark:text-mute-dark">Each round is about 9 seconds (in · hold · out). Pick whatever feels doable.</p>
+            </div>
+            <div className="grid grid-cols-5 gap-2 mt-4">
+              {[1,2,3,4,5].map(n => (
+                <button
+                  key={n}
+                  onClick={() => setTargetRounds(n)}
+                  className={`aspect-square rounded-card font-extrabold text-xl transition ${targetRounds === n ? 'bg-lilac-strong text-white' : 'bg-surface-light dark:bg-surface-dark'}`}
+                >{n}</button>
+              ))}
+            </div>
+            <p className="text-xs text-center text-mute-light dark:text-mute-dark">
+              {targetRounds} round{targetRounds > 1 ? 's' : ''} · about {targetRounds * 9}s
+            </p>
+            <div className="mt-auto"><Button onClick={start}>Start</Button></div>
+          </Screen>
+        )}
+
+        {stage === 'running' && (
+          <Screen className="px-6 flex flex-col items-center justify-center gap-8">
+            <div className="relative flex items-center justify-center h-64 w-64">
+              <div className={`absolute rounded-full bg-sky-soft dark:bg-sky/20 transition-all duration-[3000ms] ${phase === 'in' ? 'w-60 h-60' : phase === 'hold' ? 'w-60 h-60' : 'w-24 h-24'}`}/>
+              <p className="relative text-2xl font-extrabold">
+                {phase === 'in' ? 'Breathe in' : phase === 'hold' ? 'Hold' : 'Breathe out'}
+              </p>
+            </div>
+            <p className="text-sm font-semibold text-mute-light dark:text-mute-dark">
+              Round {currentRound} of {targetRounds}
+            </p>
+            <button onClick={onBack} className="text-sm font-semibold text-mute-light dark:text-mute-dark py-2">
+              Stop early
+            </button>
+          </Screen>
+        )}
+
+        {stage === 'done' && (
+          <Screen className="px-6 pb-6 flex flex-col items-center text-center gap-5">
+            <div className="mt-6"><Panda mood="cheer" size={150}/></div>
+            <h2 className="text-2xl font-extrabold">Nicely done.</h2>
+            <p className="text-sm text-mute-light dark:text-mute-dark">
+              You finished {targetRounds} round{targetRounds > 1 ? 's' : ''}. Notice anything? Breath a little slower, shoulders a little lower.
+            </p>
+            <div className="w-full flex flex-col gap-3 mt-auto">
+              <Button onClick={() => setStage('setup')}>Go again</Button>
+              <Button variant="secondary" onClick={onBack}>I feel steadier</Button>
+            </div>
+          </Screen>
+        )}
+      </Container>
+    );
+  };
+
+  // ==============================================================
+  //  ROUTER
+  // ==============================================================
+  const App = () => {
+    const [dark, setDark] = useState(false);
+    const [route, setRoute] = useState({ name: 'splash' });
+    const [nav, setNav] = useState('home');
+
+    useEffect(() => {
+      document.documentElement.classList.toggle('dark', dark);
+    }, [dark]);
+
+    const go = (name, params = {}) => setRoute({ name, ...params });
+
+    // dev shortcuts
+    useEffect(() => {
+      const jumpTo = new URLSearchParams(window.location.search).get('to');
+      if (jumpTo) go(jumpTo);
+    }, []);
+
+    const onCrisis = () => go('crisis');
+
+    // render by route
+    const screen = (() => {
+      switch (route.name) {
+        case 'splash': return <Container><Splash onNext={() => go('welcome')}/></Container>;
+        case 'welcome': return <Container><Welcome onDone={() => go('account')}/></Container>;
+        case 'account': return <Container><AccountChoice onGuest={() => go('guestConfirm')} onSignUp={() => go('guestConfirm')} onSignIn={() => go('guestConfirm')}/></Container>;
+        case 'guestConfirm': return <GuestConfirm onContinue={() => go('onboarding')} onBack={() => go('account')}/>;
+        case 'onboarding': return <Onboarding onDone={() => go('tabs')}/>;
+        case 'tabs':
+        case 'breathing':
+        case 'settings': {
+          // tab container — show chosen tab
+          const crisisHandler = () => go('crisis');
+          if (route.name === 'breathing') return <Breathing onBack={() => go('tabs')}/>;
+          if (nav === 'home') return <Home go={go} nav={nav} setNav={setNav} onCrisis={crisisHandler}/>;
+          if (nav === 'practice') return <Practice go={go} nav={nav} setNav={setNav} onCrisis={crisisHandler}/>;
+          if (nav === 'reminders') return <Reminders go={go} nav={nav} setNav={setNav} onCrisis={crisisHandler}/>;
+          if (nav === 'journal') return <Journal go={go} nav={nav} setNav={setNav} onCrisis={crisisHandler}/>;
+          if (nav === 'me') return <Me go={go} nav={nav} setNav={setNav} dark={dark} setDark={setDark} onCrisis={crisisHandler}/>;
+          return null;
+        }
+        case 'scenario': return <ScenarioDetail id={route.id} onBack={() => go('tabs')} go={go}/>;
+        case 'prep': return <Prep id={route.id} onBack={() => go('scenario', { id: route.id })} go={go}/>;
+        case 'roleplay': return <Roleplay id={route.id} onBack={() => go('tabs')} go={go}/>;
+        case 'reflection': return <Reflection id={route.id} onDone={() => { setNav('journal'); go('tabs'); }}/>;
+        case 'crisis': return <Crisis onBack={() => go('tabs')}/>;
+        case 'addReminder': return <AddReminder onBack={() => go('tabs')} onSave={() => go('tabs')}/>;
+        case 'journalNew': return <JournalNew onBack={() => go('tabs')} onSave={() => { setNav('journal'); go('tabs'); }}/>;
+        default: return <Container><Splash onNext={() => go('welcome')}/></Container>;
+      }
+    })();
+
+    return (
+      <>
+        {/* Dev bar (only on sm+) */}
+        <div className="hidden sm:flex fixed top-3 right-3 z-50 gap-2 items-center text-xs bg-white/70 dark:bg-surface-dark/70 backdrop-blur rounded-full px-2 py-1 shadow-soft">
+          <button onClick={() => setDark(!dark)} className="w-7 h-7 rounded-full flex items-center justify-center bg-lilac-soft dark:bg-lilac/20">
+            <Icon name={dark ? 'sun' : 'moon'} size={14}/>
+          </button>
+          <select
+            value={route.name}
+            onChange={e => go(e.target.value, e.target.value === 'scenario' || e.target.value === 'prep' || e.target.value === 'roleplay' || e.target.value === 'reflection' ? { id: 'coffee' } : {})}
+            className="bg-transparent text-ink-light dark:text-ink-dark font-semibold text-xs outline-none"
+          >
+            <option value="splash">Splash</option>
+            <option value="welcome">Welcome slides</option>
+            <option value="account">Account choice</option>
+            <option value="guestConfirm">Guest confirm</option>
+            <option value="onboarding">Onboarding</option>
+            <option value="tabs">Home / Tabs</option>
+            <option value="scenario">Scenario detail</option>
+            <option value="prep">Prep flow</option>
+            <option value="roleplay">Roleplay</option>
+            <option value="reflection">Reflection</option>
+            <option value="addReminder">Add reminder</option>
+            <option value="journalNew">Journal new</option>
+            <option value="crisis">Crisis resources</option>
+            <option value="breathing">Breathing</option>
+          </select>
+        </div>
+        {screen}
+      </>
+    );
+  };
+
+  ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
