@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Astro — Logo Lab</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Nunito', 'system-ui', 'sans-serif'] },
+          colors: {
+            bg: '#FBF8FF',
+            surface: '#FFFFFF',
+            lilac: '#B5A5E8',
+            lilacStrong: '#8E78D0',
+            lilacSoft: '#E8E0FB',
+            sage: '#A8C9A8',
+            sky: '#A5C9E8',
+            ink: '#2D2A3E',
+            mute: '#6B6880'
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body { font-family: 'Nunito', system-ui, sans-serif; background: #EEE7F9; }
+    .card { box-shadow: 0 4px 16px rgba(45,42,62,0.08); }
+    .app-icon-frame {
+      background: linear-gradient(135deg, #E8E0FB 0%, #DEEDFB 100%);
+      border-radius: 22%;
+      box-shadow: 0 8px 24px rgba(45,42,62,0.12);
+    }
+  </style>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel" data-presets="react">
+  // ==============================================================
+  //  ASTRO — Logo Lab
+  //  Visual comparison of panda mascot direction options.
+  //  Nothing is wired into the main prototype.
+  // ==============================================================
+
+  // ---------- CURRENT (reference) ----------
+  const PandaCurrent = ({ size = 140, mood = 'calm' }) => (
+    <svg viewBox="0 0 80 80" width={size} height={size} aria-hidden="true">
+      <defs>
+        <radialGradient id="halo0" cx="50%" cy="50%" r="55%">
+          <stop offset="0%" stopColor="#DEEDFB" stopOpacity="0.9"/>
+          <stop offset="100%" stopColor="#DEEDFB" stopOpacity="0"/>
+        </radialGradient>
+      </defs>
+      <circle cx="40" cy="40" r="38" fill="url(#halo0)"/>
+      <circle cx="18" cy="20" r="9" fill="#2D2A3E"/>
+      <circle cx="62" cy="20" r="9" fill="#2D2A3E"/>
+      <circle cx="18" cy="20" r="4.5" fill="#4D4A60"/>
+      <circle cx="62" cy="20" r="4.5" fill="#4D4A60"/>
+      <ellipse cx="40" cy="44" rx="26" ry="24" fill="#FFFFFF"/>
+      <ellipse cx="22" cy="50" rx="5" ry="3" fill="#F2B5B5" opacity="0.7"/>
+      <ellipse cx="58" cy="50" rx="5" ry="3" fill="#F2B5B5" opacity="0.7"/>
+      <ellipse cx="30" cy="40" rx="6" ry="8" fill="#2D2A3E" transform="rotate(-12 30 40)"/>
+      <ellipse cx="50" cy="40" rx="6" ry="8" fill="#2D2A3E" transform="rotate(12 50 40)"/>
+      <ellipse cx="31" cy="40" rx="3" ry="3.2" fill="#FFFFFF"/>
+      <ellipse cx="49" cy="40" rx="3" ry="3.2" fill="#FFFFFF"/>
+      <circle cx="31.5" cy="40" r="1.3" fill="#2D2A3E"/>
+      <circle cx="49.5" cy="40" r="1.3" fill="#2D2A3E"/>
+      <ellipse cx="40" cy="48" rx="2" ry="1.4" fill="#2D2A3E"/>
+      <path d="M33 52 Q40 56 47 52" stroke="#2D2A3E" strokeWidth="1.6" fill="none" strokeLinecap="round"/>
+      <path d="M66 14 Q70 10 74 14 Q72 18 68 18 Z" fill="#A8C9A8"/>
+    </svg>
+  );
+
+  // ==============================================================
+  //  VARIANT A — "Shiny" (final: black closed eyes, no dark mask)
+  //  Eye patches removed in favor of clean black closed crescents
+  //  drawn directly on the white face. Cheer differs only by a
+  //  slightly wider closed smile + slightly rosier cheeks.
+  // ==============================================================
+  const PandaShiny = ({ size = 140, mood = 'calm' }) => {
+    const cheek = {
+      calm:      { size: 7,   opacity: 0.75, color: '#F2B5B5' },
+      cheer:     { size: 7.5, opacity: 0.85, color: '#EFB0BD' }, // just a little rosier
+      listen:    { size: 7,   opacity: 0.75, color: '#F2B5B5' },
+      concern:   { size: 6,   opacity: 0.55, color: '#F2B5B5' },
+      sleep:     { size: 7,   opacity: 0.70, color: '#F2B5B5' },
+      breathing: { size: 7,   opacity: 0.70, color: '#F2B5B5' }
+    }[mood] || { size: 7, opacity: 0.75, color: '#F2B5B5' };
+
+    const renderMouth = () => {
+      switch (mood) {
+        case 'cheer':
+          // Slightly wider closed smile — no teeth, no open mouth
+          return <path d="M43 66 Q50 72 57 66" stroke="#1A1826" strokeWidth="2" fill="none" strokeLinecap="round"/>;
+        case 'concern':
+          return <path d="M46 69 Q50 68 54 69" stroke="#1A1826" strokeWidth="1.8" fill="none" strokeLinecap="round"/>;
+        case 'breathing':
+          return <ellipse cx="50" cy="69" rx="2.2" ry="1.8" fill="#1A1826" opacity="0.75"/>;
+        default:
+          return <path d="M45 67 Q50 70 55 67" stroke="#1A1826" strokeWidth="1.8" fill="none" strokeLinecap="round"/>;
+      }
+    };
+
+    const renderBrows = () => {
+      if (mood !== 'concern') return null;
+      return (
+        <>
+          <path d="M33 44 Q37 43 41 45" stroke="#1A1826" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+          <path d="M59 45 Q63 43 67 44" stroke="#1A1826" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+        </>
+      );
+    };
+
+    return (
+      <svg viewBox="0 0 100 100" width={size} height={size} aria-hidden="true">
+        <defs>
+          <radialGradient id="haloA" cx="50%" cy="50%" r="55%">
+            <stop offset="0%" stopColor="#E8E0FB" stopOpacity="0.9"/>
+            <stop offset="100%" stopColor="#E8E0FB" stopOpacity="0"/>
+          </radialGradient>
+          <linearGradient id="bodyA" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stopColor="#FFFFFF"/>
+            <stop offset="100%" stopColor="#F5F0FC"/>
+          </linearGradient>
+        </defs>
+
+        {/* halo */}
+        <circle cx="50" cy="50" r="48" fill="url(#haloA)"/>
+
+        {/* ears — the panda identity lives here now */}
+        <circle cx="26" cy="28" r="11" fill="#1A1826"/>
+        <circle cx="74" cy="28" r="11" fill="#1A1826"/>
+        <circle cx="26" cy="28" r="5.5" fill="#F2B5B5" opacity="0.55"/>
+        <circle cx="74" cy="28" r="5.5" fill="#F2B5B5" opacity="0.55"/>
+
+        {/* body */}
+        <ellipse cx="50" cy="88" rx="22" ry="10" fill="url(#bodyA)"/>
+        <ellipse cx="33" cy="90" rx="5" ry="3.5" fill="#1A1826"/>
+        <ellipse cx="67" cy="90" rx="5" ry="3.5" fill="#1A1826"/>
+
+        {/* head */}
+        <circle cx="50" cy="52" r="32" fill="url(#bodyA)"/>
+
+        {/* cheek blush */}
+        <ellipse cx="28" cy="58" rx={cheek.size} ry={cheek.size * 0.65} fill={cheek.color} opacity={cheek.opacity}/>
+        <ellipse cx="72" cy="58" rx={cheek.size} ry={cheek.size * 0.65} fill={cheek.color} opacity={cheek.opacity}/>
+
+        {/* BLACK closed crescent eyes directly on the face */}
+        <path d="M33 52 Q38 46 43 52" stroke="#1A1826" strokeWidth="2.4" fill="none" strokeLinecap="round"/>
+        <path d="M57 52 Q62 46 67 52" stroke="#1A1826" strokeWidth="2.4" fill="none" strokeLinecap="round"/>
+
+        {renderBrows()}
+
+        {/* nose */}
+        <ellipse cx="50" cy="62" rx="2" ry="1.4" fill="#1A1826"/>
+
+        {/* mouth */}
+        {renderMouth()}
+
+        {/* sage leaf accent */}
+        <path d="M80 18 Q86 14 90 20 Q85 24 80 22 Z" fill="#A8C9A8"/>
+      </svg>
+    );
+  };
+
+  // ==============================================================
+  //  VARIANT B — "Simple" (Miffy / Pusheen-inspired)
+  //  Clean, minimal. Small dot eyes, big cheeks, soft curves.
+  //  Scales beautifully at small sizes (great app icon).
+  // ==============================================================
+  const PandaSimple = ({ size = 140, mood = 'calm' }) => (
+    <svg viewBox="0 0 100 100" width={size} height={size} aria-hidden="true">
+      <defs>
+        <radialGradient id="haloB" cx="50%" cy="50%" r="55%">
+          <stop offset="0%" stopColor="#DFEDDF" stopOpacity="0.7"/>
+          <stop offset="100%" stopColor="#DFEDDF" stopOpacity="0"/>
+        </radialGradient>
+      </defs>
+      <circle cx="50" cy="50" r="48" fill="url(#haloB)"/>
+
+      {/* ears — simpler, flatter */}
+      <ellipse cx="26" cy="26" rx="10" ry="9" fill="#4A4558"/>
+      <ellipse cx="74" cy="26" rx="10" ry="9" fill="#4A4558"/>
+
+      {/* head — fully round */}
+      <circle cx="50" cy="54" r="34" fill="#FFFFFF"/>
+
+      {/* BIG cheeks — signature feature */}
+      <circle cx="27" cy="62" r="6" fill="#F2B5B5" opacity="0.8"/>
+      <circle cx="73" cy="62" r="6" fill="#F2B5B5" opacity="0.8"/>
+
+      {/* eye patches — soft rounded squares, gentle */}
+      <ellipse cx="39" cy="54" rx="5" ry="6" fill="#4A4558" opacity="0.85"/>
+      <ellipse cx="61" cy="54" rx="5" ry="6" fill="#4A4558" opacity="0.85"/>
+
+      {/* tiny bean eyes — clean, no highlights */}
+      <ellipse cx="39" cy="55" rx="2" ry="2.6" fill="#2D2A3E"/>
+      <ellipse cx="61" cy="55" rx="2" ry="2.6" fill="#2D2A3E"/>
+
+      {/* tiny nose */}
+      <ellipse cx="50" cy="66" rx="1.5" ry="1" fill="#2D2A3E"/>
+
+      {/* w-smile mouth */}
+      <path d="M46 71 Q48 74 50 72 Q52 74 54 71" stroke="#2D2A3E" strokeWidth="1.6" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+
+      {/* lilac accent dot on ear — minimal */}
+      <circle cx="82" cy="20" r="3" fill="#B5A5E8"/>
+    </svg>
+  );
+
+  // ==============================================================
+  //  VARIANT C — "Cozy" (Rilakkuma / Relax Bear-inspired)
+  //  Sleepy closed eyes, wide content smile. Body visible with paws.
+  //  Self-hugging posture. Maximum snuggle-factor.
+  // ==============================================================
+  const PandaCozy = ({ size = 140, mood = 'calm' }) => (
+    <svg viewBox="0 0 100 100" width={size} height={size} aria-hidden="true">
+      <defs>
+        <radialGradient id="haloC" cx="50%" cy="50%" r="55%">
+          <stop offset="0%" stopColor="#DEEDFB" stopOpacity="0.8"/>
+          <stop offset="100%" stopColor="#DEEDFB" stopOpacity="0"/>
+        </radialGradient>
+      </defs>
+      <circle cx="50" cy="50" r="48" fill="url(#haloC)"/>
+
+      {/* ears */}
+      <circle cx="27" cy="25" r="10" fill="#4A4558"/>
+      <circle cx="73" cy="25" r="10" fill="#4A4558"/>
+      <circle cx="27" cy="25" r="5" fill="#6B6480"/>
+      <circle cx="73" cy="25" r="5" fill="#6B6480"/>
+
+      {/* body — visible, chubby, wider than head */}
+      <ellipse cx="50" cy="82" rx="28" ry="14" fill="#FFFFFF"/>
+      {/* arms crossed / self-hug */}
+      <ellipse cx="28" cy="80" rx="9" ry="6" fill="#4A4558" transform="rotate(15 28 80)"/>
+      <ellipse cx="72" cy="80" rx="9" ry="6" fill="#4A4558" transform="rotate(-15 72 80)"/>
+
+      {/* head — slightly squished (wider) */}
+      <ellipse cx="50" cy="50" rx="32" ry="29" fill="#FFFFFF"/>
+
+      {/* cheek blush — soft and low */}
+      <ellipse cx="26" cy="58" rx="6" ry="4" fill="#F2B5B5" opacity="0.7"/>
+      <ellipse cx="74" cy="58" rx="6" ry="4" fill="#F2B5B5" opacity="0.7"/>
+
+      {/* eye patches */}
+      <ellipse cx="38" cy="48" rx="6" ry="7" fill="#4A4558"/>
+      <ellipse cx="62" cy="48" rx="6" ry="7" fill="#4A4558"/>
+
+      {/* CLOSED crescent-smile eyes — sleepy content */}
+      <path d="M33 50 Q38 44 43 50" stroke="#FFFFFF" strokeWidth="2.2" fill="none" strokeLinecap="round"/>
+      <path d="M57 50 Q62 44 67 50" stroke="#FFFFFF" strokeWidth="2.2" fill="none" strokeLinecap="round"/>
+
+      {/* nose */}
+      <ellipse cx="50" cy="58" rx="2.2" ry="1.5" fill="#2D2A3E"/>
+
+      {/* wide content smile */}
+      <path d="M42 64 Q50 70 58 64" stroke="#2D2A3E" strokeWidth="1.8" fill="none" strokeLinecap="round"/>
+
+      {/* sage leaf */}
+      <path d="M80 16 Q86 12 90 18 Q85 22 80 20 Z" fill="#A8C9A8"/>
+    </svg>
+  );
+
+  // ==============================================================
+  //  ALTERNATIVE DIRECTION — Tulip Logo (pink with cute face)
+  //  Single unified bloom with 3 scalloped petal tips, sage leaves,
+  //  and a peaceful closed-eye face. Pink only, minimal and warm.
+  // ==============================================================
+  const TulipLogo = ({ size = 140, mood = 'calm' }) => (
+    <svg viewBox="0 0 100 100" width={size} height={size} aria-hidden="true">
+      <defs>
+        <radialGradient id="haloT" cx="50%" cy="55%" r="55%">
+          <stop offset="0%" stopColor="#FBEEF4" stopOpacity="0.9"/>
+          <stop offset="100%" stopColor="#FBEEF4" stopOpacity="0"/>
+        </radialGradient>
+        <linearGradient id="tulipPink" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor="#F7C5D1"/>
+          <stop offset="100%" stopColor="#EFA0B0"/>
+        </linearGradient>
+        <linearGradient id="tulipPinkLight" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor="#FBD5DD"/>
+          <stop offset="100%" stopColor="#F7C5D1"/>
+        </linearGradient>
+        <linearGradient id="leafGrad" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor="#B8D9B8"/>
+          <stop offset="100%" stopColor="#7FAE7F"/>
+        </linearGradient>
+        <linearGradient id="stemGrad2" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor="#A8C9A8"/>
+          <stop offset="100%" stopColor="#7FAE7F"/>
+        </linearGradient>
+      </defs>
+
+      {/* halo */}
+      <circle cx="50" cy="52" r="48" fill="url(#haloT)"/>
+
+      {/* ---- STEM + LEAVES (drawn first, behind bloom) ---- */}
+      <path d="M 50 60 L 50 94" stroke="url(#stemGrad2)" strokeWidth="3" strokeLinecap="round" fill="none"/>
+
+      {/* Left leaf — pointed oval curling outward */}
+      <path d="M 49 78
+               Q 32 72 22 84
+               Q 24 90 34 90
+               Q 44 88 49 84
+               Z" fill="url(#leafGrad)"/>
+      {/* leaf vein */}
+      <path d="M 30 84 Q 38 85 44 83" stroke="#FFFFFF" strokeWidth="0.7" fill="none" opacity="0.4" strokeLinecap="round"/>
+
+      {/* Right leaf */}
+      <path d="M 51 78
+               Q 68 72 78 84
+               Q 76 90 66 90
+               Q 56 88 51 84
+               Z" fill="url(#leafGrad)"/>
+      <path d="M 70 84 Q 62 85 56 83" stroke="#FFFFFF" strokeWidth="0.7" fill="none" opacity="0.4" strokeLinecap="round"/>
+
+      {/* ---- BLOOM ---- */}
+      {/* Main cup body */}
+      <path d="M 32 38
+               C 30 28 38 22 44 23
+               L 56 23
+               C 62 22 70 28 68 38
+               C 68 56 60 62 50 63
+               C 40 62 32 56 32 38 Z"
+            fill="url(#tulipPink)"/>
+
+      {/* Three scalloped petal tips on top — rounded bumps */}
+      <circle cx="40" cy="24" r="5.5" fill="url(#tulipPink)"/>
+      <circle cx="50" cy="21" r="6" fill="url(#tulipPinkLight)"/>
+      <circle cx="60" cy="24" r="5.5" fill="url(#tulipPink)"/>
+
+      {/* Subtle petal separation lines (very light) */}
+      <path d="M 43 28 Q 42 42 43 54" stroke="#E98EA0" strokeWidth="0.7" fill="none" opacity="0.4"/>
+      <path d="M 57 28 Q 58 42 57 54" stroke="#E98EA0" strokeWidth="0.7" fill="none" opacity="0.4"/>
+
+      {/* ---- FACE on the bloom ---- */}
+      {/* Closed crescent eyes */}
+      <path d="M 38 40 Q 42 36 46 40" stroke="#1A1826" strokeWidth="1.8" fill="none" strokeLinecap="round"/>
+      <path d="M 54 40 Q 58 36 62 40" stroke="#1A1826" strokeWidth="1.8" fill="none" strokeLinecap="round"/>
+
+      {/* Cheek blush dots */}
+      <circle cx="38" cy="47" r="2.4" fill="#E87A92" opacity="0.55"/>
+      <circle cx="62" cy="47" r="2.4" fill="#E87A92" opacity="0.55"/>
+
+      {/* Small smile */}
+      <path d="M 46 46 Q 50 50 54 46" stroke="#1A1826" strokeWidth="1.6" fill="none" strokeLinecap="round"/>
+    </svg>
+  );
+
+  // ==============================================================
+  //  Wordmark (Astro) — simple paired with any mascot
+  // ==============================================================
+  const Wordmark = ({ size = 32, color = '#2D2A3E' }) => (
+    <span style={{ fontWeight: 800, fontSize: size, color, letterSpacing: -1 }}>Astro</span>
+  );
+
+  // ==============================================================
+  //  Comparison card
+  // ==============================================================
+  const VariantCard = ({ name, tag, desc, pros, Panda, accent }) => (
+    <div className="card bg-surface rounded-2xl p-6 flex flex-col gap-5">
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-[11px] uppercase font-bold tracking-widest text-mute">{tag}</p>
+          <h3 className="text-2xl font-extrabold text-ink mt-1">{name}</h3>
+        </div>
+        <div className="w-14 h-14 app-icon-frame flex items-center justify-center overflow-hidden">
+          <Panda size={52}/>
+        </div>
+      </div>
+
+      <p className="text-sm text-mute leading-relaxed">{desc}</p>
+
+      {/* main portrait */}
+      <div className="flex items-center justify-center rounded-xl p-6" style={{ background: accent }}>
+        <Panda size={200}/>
+      </div>
+
+      {/* variations row */}
+      <div className="grid grid-cols-3 gap-2">
+        <div className="flex flex-col items-center gap-1 p-3 rounded-lg bg-lilacSoft">
+          <Panda size={80} mood="calm"/>
+          <p className="text-[10px] font-bold uppercase tracking-wide text-mute">Default</p>
+        </div>
+        <div className="flex flex-col items-center gap-1 p-3 rounded-lg bg-lilacSoft">
+          <Panda size={80} mood="cheer"/>
+          <p className="text-[10px] font-bold uppercase tracking-wide text-mute">Cheering</p>
+        </div>
+        <div className="flex flex-col items-center gap-1 p-3 rounded-lg bg-lilacSoft">
+          <Panda size={80} mood="sleep"/>
+          <p className="text-[10px] font-bold uppercase tracking-wide text-mute">Closed eyes</p>
+        </div>
+      </div>
+
+      {/* pros/cons */}
+      <div>
+        <p className="text-xs font-bold uppercase tracking-wide text-mute mb-2">What it does well</p>
+        <ul className="text-sm text-ink space-y-1 list-disc list-inside">
+          {pros.map((p, i) => <li key={i}>{p}</li>)}
+        </ul>
+      </div>
+
+      {/* app-icon & wordmark mockups */}
+      <div className="grid grid-cols-2 gap-3 pt-2 border-t border-lilacSoft">
+        <div className="flex flex-col items-center gap-2">
+          <div className="w-24 h-24 app-icon-frame flex items-center justify-center overflow-hidden">
+            <Panda size={92}/>
+          </div>
+          <p className="text-[10px] uppercase font-bold tracking-wide text-mute">App icon</p>
+        </div>
+        <div className="flex flex-col items-center justify-center gap-1 bg-lilacSoft rounded-xl">
+          <Panda size={56}/>
+          <Wordmark size={22}/>
+        </div>
+      </div>
+    </div>
+  );
+
+  // ==============================================================
+  //  App
+  // ==============================================================
+  const App = () => (
+    <div className="min-h-screen py-10 px-5 md:px-10">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="mb-10 text-center">
+          <p className="text-[11px] uppercase font-bold tracking-[0.2em] text-lilacStrong">Mascot Direction</p>
+          <h1 className="text-4xl md:text-5xl font-extrabold text-ink mt-2">Astro — Logo Lab</h1>
+          <p className="text-mute mt-3 max-w-xl mx-auto">Three friendlier directions for the panda, side-by-side. Nothing here is wired into the main prototype — pick one (or mix elements) to greenlight.</p>
+        </div>
+
+        {/* FINALIST SECTION — refined Shiny + Tulip alternative */}
+        <div className="mb-10">
+          <p className="text-[11px] uppercase font-bold tracking-widest text-lilacStrong text-center mb-2">Two directions to pick from</p>
+          <h2 className="text-2xl md:text-3xl font-extrabold text-ink text-center mb-6">Astro Panda (refined) · or · Astro Tulip</h2>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Refined Shiny */}
+            <div className="card bg-surface rounded-2xl p-6 flex flex-col gap-5">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-[11px] uppercase font-bold tracking-widest text-mute">Option 1 · Character</p>
+                  <h3 className="text-2xl font-extrabold text-ink mt-1">Astro the Panda</h3>
+                  <p className="text-sm text-mute mt-1">Shiny variant, refined eyes</p>
+                </div>
+                <div className="w-14 h-14 app-icon-frame flex items-center justify-center overflow-hidden">
+                  <PandaShiny size={52}/>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-center rounded-xl p-8" style={{ background: '#E8E0FB' }}>
+                <PandaShiny size={220}/>
+              </div>
+
+              <p className="text-sm text-mute leading-relaxed">
+                Same warm chibi direction you liked, but the eyes are now simpler — just a single small catch-light instead of two sparkles. Reads as natural and present, not cartoon-anime. Still warm, still friendly, just more grown-up.
+              </p>
+
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wide text-mute mb-2">Strengths</p>
+                <ul className="text-sm text-ink space-y-1 list-disc list-inside">
+                  <li>A companion the user can bond with</li>
+                  <li>Can show emotion across all five roleplay moods</li>
+                  <li>Chat-avatar friendly (head reads at 32pt)</li>
+                  <li>Memorable — characters stick</li>
+                </ul>
+              </div>
+
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wide text-mute mb-2">Tradeoffs</p>
+                <ul className="text-sm text-mute space-y-1 list-disc list-inside">
+                  <li>Leans younger — teens love it, some 30-somethings may feel it's too cute</li>
+                  <li>Requires illustration work across 5 moods</li>
+                </ul>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 pt-2 border-t border-lilacSoft">
+                <div className="flex flex-col items-center gap-1 p-3 rounded-lg bg-lilacSoft">
+                  <PandaShiny size={64} mood="calm"/>
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-mute">Calm</p>
+                </div>
+                <div className="flex flex-col items-center gap-1 p-3 rounded-lg bg-lilacSoft">
+                  <PandaShiny size={64} mood="cheer"/>
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-mute">Cheer</p>
+                </div>
+                <div className="flex flex-col items-center gap-1 p-3 rounded-lg bg-lilacSoft">
+                  <PandaShiny size={64} mood="sleep"/>
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-mute">Rest</p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-center gap-3 p-4 rounded-xl bg-lilacSoft">
+                <PandaShiny size={48}/>
+                <Wordmark size={28}/>
+              </div>
+            </div>
+
+            {/* Tulip */}
+            <div className="card bg-surface rounded-2xl p-6 flex flex-col gap-5">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-[11px] uppercase font-bold tracking-widest text-mute">Option 2 · Symbol</p>
+                  <h3 className="text-2xl font-extrabold text-ink mt-1">Astro Tulip</h3>
+                  <p className="text-sm text-mute mt-1">Pink bloom with a cute face</p>
+                </div>
+                <div className="w-14 h-14 app-icon-frame flex items-center justify-center overflow-hidden">
+                  <TulipLogo size={52}/>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-center rounded-xl p-8" style={{ background: 'linear-gradient(135deg, #E8E0FB 0%, #FBEEF4 100%)' }}>
+                <TulipLogo size={220}/>
+              </div>
+
+              <p className="text-sm text-mute leading-relaxed">
+                A single rounded pink bloom with a gentle closed-eye face — like a small friend, not a corporate mark. Three scalloped petal tips on top, sage green leaves curling off the stem. Warm, minimal, instantly legible.
+              </p>
+
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wide text-mute mb-2">Strengths</p>
+                <ul className="text-sm text-ink space-y-1 list-disc list-inside">
+                  <li>Ages up — works for 13-year-olds AND 35-year-olds</li>
+                  <li>No illustrator needed; one SVG is the whole asset</li>
+                  <li>Beautiful brand mark for institutional pitches (schools, employers)</li>
+                  <li>Print-friendly, merch-friendly</li>
+                  <li>No "cute" baggage — feels clinical-in-a-good-way</li>
+                </ul>
+              </div>
+
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wide text-mute mb-2">Tradeoffs</p>
+                <ul className="text-sm text-mute space-y-1 list-disc list-inside">
+                  <li>No companion in the roleplay — chat avatar needs rethink</li>
+                  <li>Emotional bond is weaker without a face</li>
+                  <li>Symbolism requires you to "get it" (bloom = growth)</li>
+                </ul>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 pt-2 border-t border-lilacSoft">
+                <div className="flex flex-col items-center gap-1 p-3 rounded-lg" style={{ background: '#E8E0FB' }}>
+                  <TulipLogo size={64}/>
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-mute">On lilac</p>
+                </div>
+                <div className="flex flex-col items-center gap-1 p-3 rounded-lg" style={{ background: '#DFEDDF' }}>
+                  <TulipLogo size={64}/>
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-mute">On sage</p>
+                </div>
+                <div className="flex flex-col items-center gap-1 p-3 rounded-lg bg-ink">
+                  <TulipLogo size={64}/>
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-surface">On dark</p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-center gap-3 p-4 rounded-xl" style={{ background: 'linear-gradient(135deg, #E8E0FB 0%, #FBEEF4 100%)' }}>
+                <TulipLogo size={48}/>
+                <Wordmark size={28}/>
+              </div>
+            </div>
+          </div>
+
+          {/* Size test for the tulip alone */}
+          <div className="card bg-surface rounded-2xl p-6 mt-6">
+            <p className="text-[11px] uppercase font-bold tracking-widest text-mute">Tulip · small-size test</p>
+            <h4 className="text-lg font-extrabold text-ink mt-1 mb-4">How the tulip reads tiny</h4>
+            <div className="flex items-end gap-6 justify-center">
+              <div className="flex flex-col items-center gap-2">
+                <TulipLogo size={20}/>
+                <p className="text-[10px] text-mute">20pt</p>
+              </div>
+              <div className="flex flex-col items-center gap-2">
+                <TulipLogo size={32}/>
+                <p className="text-[10px] text-mute">32pt</p>
+              </div>
+              <div className="flex flex-col items-center gap-2">
+                <TulipLogo size={48}/>
+                <p className="text-[10px] text-mute">48pt</p>
+              </div>
+              <div className="flex flex-col items-center gap-2">
+                <TulipLogo size={80}/>
+                <p className="text-[10px] text-mute">80pt</p>
+              </div>
+              <div className="flex flex-col items-center gap-2">
+                <TulipLogo size={120}/>
+                <p className="text-[10px] text-mute">120pt</p>
+              </div>
+            </div>
+            <p className="text-xs text-mute mt-4 leading-relaxed text-center">
+              Holds up down to 32pt easily. Below 20pt the three petal colors start to blur — still reads as a flower, but the layering is lost.
+            </p>
+          </div>
+
+          {/* Decision guidance */}
+          <div className="card bg-surface rounded-2xl p-6 mt-6">
+            <p className="text-[11px] uppercase font-bold tracking-widest text-mute">Which to pick</p>
+            <h4 className="text-lg font-extrabold text-ink mt-1 mb-3">How to decide between them</h4>
+            <div className="grid md:grid-cols-2 gap-4 text-sm text-ink">
+              <div className="p-4 rounded-xl bg-lilacSoft">
+                <p className="font-bold mb-2">Choose the Panda if…</p>
+                <ul className="list-disc list-inside space-y-1 text-mute">
+                  <li>You want users to bond with a companion</li>
+                  <li>Your primary audience is teens and college students</li>
+                  <li>You're comfortable investing in mascot illustration</li>
+                  <li>Roleplay character feel matters most</li>
+                </ul>
+              </div>
+              <div className="p-4 rounded-xl" style={{ background: '#FBEEF4' }}>
+                <p className="font-bold mb-2">Choose the Tulip if…</p>
+                <ul className="list-disc list-inside space-y-1 text-mute">
+                  <li>You want to reach adults and institutional partners</li>
+                  <li>You want a single, timeless brand mark</li>
+                  <li>You prefer "symbol" over "character"</li>
+                  <li>Budget for illustration is tight</li>
+                </ul>
+              </div>
+            </div>
+            <p className="text-sm text-ink mt-4 leading-relaxed">
+              <strong>A middle path:</strong> the Tulip is the brand/app-icon, and a simplified panda appears only as the roleplay chat avatar. Best of both — you get a mature brand + a warm in-chat companion. Worth considering if you like both.
+            </p>
+          </div>
+        </div>
+
+        {/* Current (for comparison) */}
+        <div className="card bg-surface rounded-2xl p-6 mb-10 flex flex-col md:flex-row gap-6 items-center">
+          <div className="flex items-center gap-4">
+            <PandaCurrent size={110}/>
+            <div>
+              <p className="text-[11px] uppercase font-bold tracking-widest text-mute">Current</p>
+              <h3 className="text-2xl font-extrabold text-ink">"Bao" as-is</h3>
+            </div>
+          </div>
+          <p className="text-sm text-mute leading-relaxed flex-1">
+            For reference. Rotated eye patches + small pupils in big whites read as a stare. We keep the palette and the sage leaf motif — everything else is up for redesign.
+          </p>
+        </div>
+
+        {/* Variants */}
+        <div className="grid md:grid-cols-3 gap-6">
+          <VariantCard
+            name="Shiny"
+            tag="Variant A"
+            desc="Warm chibi. Big dark round pupils with two white highlights create a friendly, alive feeling. Small open-mouth smile with a pink tongue. Tiny body and paws peek below the head."
+            pros={[
+              'Most expressive — easy to animate moods',
+              'Feels "alive" and conversational',
+              'Distinctive at larger sizes (onboarding, splash)',
+              'Pairs well with roleplay chat avatar use'
+            ]}
+            Panda={PandaShiny}
+            accent="#E8E0FB"
+          />
+
+          <VariantCard
+            name="Simple"
+            tag="Variant B"
+            desc="Minimalist. Tiny bean eyes, oversized pink cheeks, classic w-smile. No body — head-only. Clean enough to work as an icon at 16pt and as a brand logo at 200pt."
+            pros={[
+              'Best for app icon — holds up at tiny sizes',
+              'Most versatile across brand contexts',
+              'Feels modern, sticker-friendly, print-friendly',
+              'Easiest to get consistent across an illustrator team'
+            ]}
+            Panda={PandaSimple}
+            accent="#DFEDDF"
+          />
+
+          <VariantCard
+            name="Cozy"
+            tag="Variant C"
+            desc="Sleepy-cozy. Closed crescent eyes and a wide content smile. Visible body with little paws tucked in — a self-hug posture. Snuggle-maximizing."
+            pros={[
+              'Strongest emotional warmth — calming presence',
+              'Reads as a companion, not a tool',
+              'Great for meditation / grounding screens',
+              'Body posture gives the mascot real personality'
+            ]}
+            Panda={PandaCozy}
+            accent="#DEEDFB"
+          />
+        </div>
+
+        {/* Recommendation */}
+        <div className="card bg-surface rounded-2xl p-6 mt-10">
+          <p className="text-[11px] uppercase font-bold tracking-widest text-mute">My take</p>
+          <h3 className="text-xl font-extrabold text-ink mt-1 mb-3">Variant A (Shiny) is probably the best fit</h3>
+          <p className="text-sm text-ink leading-relaxed">
+            Reasons: the roleplay feature needs a mascot that can show emotion across many moments (calm, listening, cheering, concerned). Shiny's large pupils + highlights are the easiest to animate across those states. It also hits the "friendly and warm" target you asked for most directly — the two-highlight trick is exactly what's missing from the current design.
+          </p>
+          <p className="text-sm text-ink leading-relaxed mt-3">
+            Second choice: <strong>Simple</strong> — especially if you care most about brand consistency and app-icon clarity.
+          </p>
+          <p className="text-sm text-ink leading-relaxed mt-3">
+            <strong>Cozy</strong> is the warmest but its closed eyes limit expressiveness for roleplay. It'd work great as a *secondary* pose — e.g., what Astro looks like during the breathing / grounding screens specifically.
+          </p>
+        </div>
+
+        {/* Mix and match */}
+        <div className="card bg-surface rounded-2xl p-6 mt-6">
+          <p className="text-[11px] uppercase font-bold tracking-widest text-mute">Or mix</p>
+          <h3 className="text-xl font-extrabold text-ink mt-1 mb-3">A recipe you could greenlight</h3>
+          <ul className="text-sm text-ink leading-relaxed space-y-2 list-disc list-inside">
+            <li><strong>Primary mascot:</strong> Variant A (Shiny) — used everywhere as default</li>
+            <li><strong>Breathing / grounding pose:</strong> Variant C (Cozy) closed eyes — used only on that screen</li>
+            <li><strong>App icon:</strong> A simplified Variant A — just the head + halo, no body, at 1024pt master</li>
+            <li><strong>Chat avatar (roleplay):</strong> 32pt Variant A, head only</li>
+          </ul>
+          <p className="text-sm text-ink leading-relaxed mt-4">
+            This gives Astro range without losing consistency.
+          </p>
+        </div>
+
+        {/* Size test */}
+        <div className="card bg-surface rounded-2xl p-6 mt-6">
+          <p className="text-[11px] uppercase font-bold tracking-widest text-mute">Small-size legibility</p>
+          <h3 className="text-xl font-extrabold text-ink mt-1 mb-4">How each holds up tiny</h3>
+          <div className="grid grid-cols-3 gap-6">
+            <div className="flex flex-col items-center gap-2">
+              <div className="flex items-end gap-3">
+                <PandaShiny size={24}/>
+                <PandaShiny size={40}/>
+                <PandaShiny size={64}/>
+              </div>
+              <p className="text-xs font-bold text-mute mt-2">A · Shiny</p>
+            </div>
+            <div className="flex flex-col items-center gap-2">
+              <div className="flex items-end gap-3">
+                <PandaSimple size={24}/>
+                <PandaSimple size={40}/>
+                <PandaSimple size={64}/>
+              </div>
+              <p className="text-xs font-bold text-mute mt-2">B · Simple</p>
+            </div>
+            <div className="flex flex-col items-center gap-2">
+              <div className="flex items-end gap-3">
+                <PandaCozy size={24}/>
+                <PandaCozy size={40}/>
+                <PandaCozy size={64}/>
+              </div>
+              <p className="text-xs font-bold text-mute mt-2">C · Cozy</p>
+            </div>
+          </div>
+          <p className="text-xs text-mute mt-4 leading-relaxed">
+            At 24pt (chat avatar size), Simple and Shiny both read clearly. Cozy gets muddled at the smallest sizes because of the body detail — another vote for keeping Cozy as a pose, not a primary.
+          </p>
+        </div>
+
+        <p className="text-center text-xs text-mute mt-10">
+          Logo Lab · draft for review · nothing here is shipped
+        </p>
+      </div>
+    </div>
+  );
+
+  ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
