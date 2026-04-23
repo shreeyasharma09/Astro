@@ -24,6 +24,7 @@
       shield: <><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></>,
       settings: <><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .4 1.9l.1.1a2 2 0 1 1-2.9 2.9l-.1-.1a1.7 1.7 0 0 0-1.9-.4 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.9.4l-.1.1a2 2 0 1 1-2.9-2.9l.1-.1a1.7 1.7 0 0 0 .4-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.4-1.9l-.1-.1a2 2 0 1 1 2.9-2.9l.1.1a1.7 1.7 0 0 0 1.9.4H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.4l.1-.1a2 2 0 1 1 2.9 2.9l-.1.1a1.7 1.7 0 0 0-.4 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></>,
       wind: <><path d="M9.6 8a3 3 0 1 1 2.5 4.5H2"/><path d="M12 19.5a3 3 0 1 0 2.5-4.5H2"/><path d="M17.7 4.5a3.5 3.5 0 1 1 2.8 5H2"/></>,
+      mic: <><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></>,
       trash: <><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M6 6l1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14"/></>,
       lock: <><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 1 1 8 0v4"/></>
     };
@@ -209,6 +210,88 @@
       character: 'Close friend, a bit persistent.',
       opener: "Heyyy — a bunch of us are going out Friday. You're in, right?" }
   ];
+    // ---------- Safety: crisis keyword scan (free-text / speech input) ----------
+  // Matches explicit self-harm phrases, case-insensitive, whole-phrase only.
+  // If anything here hits we route to the Crisis screen and do not store
+  // or advance the scenario. Conservative list — tune with care.
+  const CRISIS_PATTERNS = [
+    /\bkill (myself|me)\b/i,
+    /\bend (my|it all) life\b/i,
+    /\bsuicid(e|al)\b/i,
+    /\bhurt (myself|me)\b/i,
+    /\bself[- ]harm\b/i,
+    /\bi (want|wanna) to die\b/i,
+    /\bno reason to live\b/i
+  ];
+  const containsCrisisLanguage = (text) => {
+    if (!text) return false;
+    return CRISIS_PATTERNS.some(r => r.test(text));
+  };
+
+  // ---------- Browser speech privacy detection ----------
+  // Safari runs Web Speech on-device. Chrome/Edge stream audio to Google's
+  // servers. This helper returns the truth so UI copy can stay honest.
+  const getSpeechPrivacyMode = () => {
+    if (typeof navigator === 'undefined') return 'unknown';
+    const ua = navigator.userAgent;
+    const isSafari = /^((?!chrome|android|crios|fxios|edg).)*safari/i.test(ua);
+    return isSafari ? 'on-device' : 'cloud';
+  };
+
+  // ---------- Web Speech API hook ----------
+  // Browser-native speech-to-text. No key, no backend.
+  // See getSpeechPrivacyMode() above for honest privacy surfacing.
+  const useSpeechRecognition = () => {
+    const SR = typeof window !== 'undefined'
+      ? (window.SpeechRecognition || window.webkitSpeechRecognition)
+      : null;
+    const supported = !!SR;
+    const [listening, setListening] = useState(false);
+    const [transcript, setTranscript] = useState('');
+    const [interim, setInterim] = useState('');
+    const [error, setError] = useState(null);
+    const recRef = useRef(null);
+
+    const start = () => {
+      if (!supported) { setError('unsupported'); return; }
+      try {
+        const rec = new SR();
+        rec.lang = 'en-US';
+        rec.interimResults = true;
+        rec.continuous = false;
+        rec.onresult = (e) => {
+          let finalText = '';
+          let interimText = '';
+          for (let i = e.resultIndex; i < e.results.length; i++) {
+            const r = e.results[i];
+            if (r.isFinal) finalText += r[0].transcript;
+            else interimText += r[0].transcript;
+          }
+          if (finalText) setTranscript(t => (t + ' ' + finalText).trim());
+          setInterim(interimText);
+        };
+        rec.onerror = (e) => {
+          setError(e.error || 'error');
+          setListening(false);
+        };
+        rec.onend = () => {
+          setListening(false);
+          setInterim('');
+        };
+        recRef.current = rec;
+        setError(null);
+        setListening(true);
+        rec.start();
+      } catch (err) {
+        setError('start-failed');
+        setListening(false);
+      }
+    };
+    const stop = () => { try { recRef.current && recRef.current.stop(); } catch (e) {} };
+    const reset = () => { setTranscript(''); setInterim(''); setError(null); };
+
+    return { supported, listening, transcript, interim, error, start, stop, reset };
+  };
 
   // ---------- Demo roleplay flow (one scenario fully scripted) ----------
   const DEMO_TURNS = {
@@ -232,6 +315,20 @@
       { role: 'assistant', text: "Thanks Alex! I'll call you when it's ready." },
       { role: 'system', text: "Nice work. That's a full interaction — you handled it well." }
     ]
+  };
+  // Canned suggestion chips for Type mode. Scenario-specific. Phase 2 will
+  // swap these for LLM-generated suggestions tailored to the current turn.
+  const TYPE_SUGGESTIONS = {
+    coffee: ['a muffin', 'a pastry', 'thanks', 'for here'],
+    directions: ['the library', 'a cafe nearby', 'thanks so much'],
+    menu: ['allergens?', 'gluten-free?', 'no thanks'],
+    'phone-appt': ['earliest available', 'thanks', 'afternoons work'],
+    return: ['it didn\'t fit', 'thanks', 'store credit is fine'],
+    professor: ['office hours?', 'the slide on', 'thank you'],
+    smalltalk: ['good, you?', 'same here', 'have a good one'],
+    party: ['totally', 'which season?', 'haha yeah'],
+    meeting: ['one thought —', 'could we', 'agreed'],
+    decline: ['maybe next time', 'thank you', 'have fun!']
   };
 
   // ---------- Shared UI ----------
@@ -283,7 +380,7 @@
   const Card = ({ children, className = '', onClick }) => (
     <div
       onClick={onClick}
-      className={`bg-surface-light dark:bg-surface-dark rounded-card shadow-soft dark:shadow-soft-dark p-4 ${onClick ? 'cursor-pointer active:scale-[0.99] transition' : ''} ${className}`}
+      className={`bg-surface-light dark:bg-surface-dark border border-lilac-soft/60 dark:border-transparent rounded-card shadow-soft dark:shadow-soft-dark p-4 ${onClick ? 'cursor-pointer active:scale-[0.99] transition' : ''} ${className}`}
     >
       {children}
     </div>
