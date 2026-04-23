@@ -49,9 +49,13 @@
         }
         case 'scenario': return <ScenarioDetail id={route.id} onBack={() => go('tabs')} go={go}/>;
         case 'prep': return <Prep id={route.id} onBack={() => go('scenario', { id: route.id })} go={go}/>;
-        case 'roleplay': return <Roleplay id={route.id} onBack={() => go('tabs')} go={go}/>;
+        case 'mode-picker': return <ModePicker id={route.id} onBack={() => go('tabs')} go={go}/>;
+        case 'roleplay': return <Roleplay id={route.id} mode={route.mode} onBack={() => go('tabs')} go={go}/>;
         case 'reflection': return <Reflection id={route.id} onDone={() => { setNav('journal'); go('tabs'); }}/>;
         case 'crisis': return <Crisis onBack={() => go('tabs')}/>;
+        case 'privacy': return <PrivacyAndData onBack={() => go('tabs')} go={go}/>;
+        case 'deleteData': return <DeleteData onBack={() => go('privacy')} go={go}/>;
+        case 'postDelete': return <PostDelete mode={route.mode} authDeleted={route.authDeleted} go={go}/>;
         case 'addReminder': return <AddReminder onBack={() => go('tabs')} onSave={() => go('tabs')}/>;
         case 'journalNew': return <JournalNew onBack={() => go('tabs')} onSave={() => { setNav('journal'); go('tabs'); }}/>;
         default: return <Container><Splash onNext={() => go('welcome')}/></Container>;

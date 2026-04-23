@@ -434,7 +434,7 @@
       return () => clearInterval(t);
     }, [step]);
 
-    const nextStep = () => step < 2 ? setStep(step + 1) : go('roleplay', { id: s.id });
+    const nextStep = () => step < 2 ? setStep(step + 1) : go('mode-picker', { id: s.id });
     return (
       <Container>
         <TopBar title={`Prep · Step ${step + 1}/3`} onBack={step > 0 ? () => setStep(step - 1) : onBack}/>
@@ -500,15 +500,119 @@
     };
     return scripts[id] || "Let's give it a try.";
   }
+    // ---------- Mode Picker (shown after prep, before roleplay) ----------
+  const ModePicker = ({ id, onBack, go }) => {
+    const s = SCENARIOS.find(x => x.id === id) || SCENARIOS[0];
+    const [showWhy, setShowWhy] = useState(false);
+    const privacy = getSpeechPrivacyMode();
 
+    const pick = (mode) => go('roleplay', { id, mode });
+
+    return (
+      <Container>
+        <TopBar title="Choose how to practice" onBack={onBack}/>
+        <Screen className="px-5 pb-6 flex flex-col gap-4">
+          <div className="text-center pt-2">
+            <div className="text-5xl mb-1">{s.emoji}</div>
+            <h2 className="text-2xl font-extrabold tracking-tight">{s.short}</h2>
+            <p className="text-xs text-mute-light dark:text-mute-dark font-semibold mt-1">Pick your comfort level — you can switch anytime.</p>
+          </div>
+
+          {/* Tap */}
+          <button
+            onClick={() => pick('tap')}
+            className="bg-surface-light dark:bg-surface-dark rounded-card p-4 flex items-center gap-3 shadow-soft dark:shadow-soft-dark text-left active:scale-[0.99] transition"
+          >
+            <div className="w-12 h-12 rounded-card bg-lilac-soft dark:bg-lilac/20 flex items-center justify-center text-lilac-strong dark:text-lilac-dark">
+              <Icon name="sparkle" size={22}/>
+            </div>
+            <div className="flex-1">
+              <p className="font-extrabold text-sm">Tap a reply</p>
+              <p className="text-[11px] text-mute-light dark:text-mute-dark font-semibold mt-0.5">Pick from 3 gentle options. Easiest start.</p>
+            </div>
+            <Icon name="chevronRight" size={16} className="text-mute-light dark:text-mute-dark"/>
+          </button>
+
+          {/* Type */}
+          <button
+            onClick={() => pick('type')}
+            className="bg-surface-light dark:bg-surface-dark rounded-card p-4 flex items-center gap-3 shadow-soft dark:shadow-soft-dark text-left active:scale-[0.99] transition"
+          >
+            <div className="w-12 h-12 rounded-card bg-sky-soft dark:bg-sky/20 flex items-center justify-center text-sky-strong dark:text-sky-dark">
+              <Icon name="book" size={22}/>
+            </div>
+            <div className="flex-1">
+              <p className="font-extrabold text-sm">Type to text</p>
+              <p className="text-[11px] text-mute-light dark:text-mute-dark font-semibold mt-0.5">Write your own replies. Take your time.</p>
+            </div>
+            <Icon name="chevronRight" size={16} className="text-mute-light dark:text-mute-dark"/>
+          </button>
+
+          {/* Speak — recommended */}
+          <button
+            onClick={() => pick('speak')}
+            className="relative rounded-card p-4 text-left active:scale-[0.99] transition border-2 border-sage shadow-soft"
+            style={{ background: 'linear-gradient(135deg, #DFEDDF 0%, #F6FBF0 100%)' }}
+          >
+            <div className="absolute -top-2.5 right-4 bg-sage-strong text-white text-[9px] font-extrabold tracking-widest px-2.5 py-1 rounded-full flex items-center gap-1">
+              <Icon name="heart" size={10}/> RECOMMENDED
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-card bg-white text-sage-strong flex items-center justify-center shadow-soft">
+                <Icon name="wind" size={22}/>
+              </div>
+              <div className="flex-1">
+                <p className="font-extrabold text-sm text-sage-strong">Speak out loud</p>
+                <p className="text-[11px] text-sage-strong font-semibold mt-0.5 opacity-80">Rehearse with your actual voice. Builds confidence faster.</p>
+              </div>
+              <Icon name="chevronRight" size={16} className="text-sage-strong"/>
+            </div>
+            <div className="mt-3 bg-white/60 rounded-btn p-2.5 flex gap-2 items-center">
+              <Panda mood="cheer" size={32}/>
+              <p className="text-[10.5px] text-sage-strong font-semibold leading-snug">
+                <b>Why Momo suggests this:</b> saying words out loud in a safe space helps your nervous system learn it's okay — so the real thing feels less scary.
+              </p>
+            </div>
+          </button>
+
+          {/* Honest privacy note — conditional on actual browser behavior */}
+          <div className="mt-auto text-center px-2">
+            {privacy === 'on-device' ? (
+              <p className="text-[11px] text-mute-light dark:text-mute-dark font-semibold leading-relaxed">
+                Your voice stays on your device. Astro doesn't record or store audio.
+              </p>
+            ) : (
+              <div>
+                <p className="text-[11px] text-mute-light dark:text-mute-dark font-semibold leading-relaxed">
+                  On this browser, speech is transcribed by Google as part of your browser's built-in speech feature. Astro doesn't record or store audio.{' '}
+                  <button
+                    onClick={() => setShowWhy(v => !v)}
+                    className="text-lilac-strong dark:text-lilac-dark font-extrabold underline"
+                  >{showWhy ? 'Hide' : 'Why?'}</button>
+                </p>
+                {showWhy && (
+                  <div className="mt-2 text-left bg-surface-light dark:bg-surface-dark rounded-btn p-3">
+                    <p className="text-[11px] text-mute-light dark:text-mute-dark leading-relaxed">
+                      Your browser provides speech-to-text. Chrome and Edge send audio to Google's servers to transcribe it — we don't control that. Safari runs speech recognition on your device.
+                    </p>
+                    <p className="text-[11px] text-mute-light dark:text-mute-dark leading-relaxed mt-2">
+                      If on-device speech matters to you, use Safari, or pick Tap / Type instead. We're working on a fully on-device option for a future update.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </Screen>
+      </Container>
+    );
+  };
   // ---------- Roleplay ----------
-  const Roleplay = ({ id, onBack, go }) => {
+  const Roleplay = ({ id, mode = 'tap', onBack, go }) => {
     const s = SCENARIOS.find(x => x.id === id) || SCENARIOS[0];
     const turns = DEMO_TURNS[id] || [
       { role: 'assistant', text: s.opener },
-      { choices: [
-        { id: 'a', text: '(type your response in the full app)' }
-      ]},
+      { choices: [{ id: 'a', text: '(type or speak your response)' }] },
       { role: 'system', text: "This scenario is available as a full demo in scenario #1 (Coffee). The others will open up with LLM-powered replies in the real build." }
     ];
     const [cursor, setCursor] = useState(0);
@@ -516,8 +620,21 @@
     const [typing, setTyping] = useState(false);
     const scrollRef = useRef(null);
 
+    // Active input mode — can switch inline without returning to the picker.
+    const [activeMode, setActiveMode] = useState(mode);
+    const [draft, setDraft] = useState('');
+    const [showMicNotice, setShowMicNotice] = useState(false);
+    const speech = useSpeechRecognition();
+    const privacy = getSpeechPrivacyMode();
+
+    // Append any final transcript to the editable draft and clear.
     useEffect(() => {
-      // push next AI/system message if at one
+      if (!speech.transcript) return;
+      setDraft(d => (d ? d + ' ' : '') + speech.transcript);
+      speech.reset();
+    }, [speech.transcript]);
+
+    useEffect(() => {
       const step = turns[cursor];
       if (!step) return;
       if (step.role === 'assistant' || step.role === 'system') {
@@ -544,6 +661,39 @@
       setCursor(x => x + 1);
     };
 
+    // Free-text / speech send. Crisis scan runs first — if it hits we
+    // discard the draft, stop the mic, and route to Crisis resources.
+    const sendFreeText = () => {
+      const text = draft.trim();
+      if (!text) return;
+      if (containsCrisisLanguage(text)) {
+        setDraft('');
+        if (speech.listening) speech.stop();
+        go('crisis');
+        return;
+      }
+      setMessages(m => [...m, { role: 'user', text }]);
+      setDraft('');
+      if (speech.listening) speech.stop();
+      if (isChoice) setCursor(x => x + 1);
+    };
+
+    const toggleMic = () => {
+      if (!speech.supported) return;
+      if (speech.listening) { speech.stop(); return; }
+      let seen = '1';
+      try { seen = window.localStorage.getItem('astro_mic_notice_v1'); } catch (e) {}
+      if (!seen) { setShowMicNotice(true); return; }
+      speech.start();
+    };
+    const acceptMicNotice = () => {
+      try { window.localStorage.setItem('astro_mic_notice_v1', '1'); } catch (e) {}
+      setShowMicNotice(false);
+      speech.start();
+    };
+
+    const modeLabel = activeMode === 'tap' ? 'tap mode' : activeMode === 'type' ? 'type mode' : 'speak mode';
+
     return (
       <Container>
         <div className="flex items-center justify-between px-5 pt-6 pb-3 border-b border-lilac-soft dark:border-ink-light/10">
@@ -552,7 +702,7 @@
             <div className="text-2xl">{s.emoji}</div>
             <div className="text-center">
               <p className="text-sm font-bold">{s.short}</p>
-              <p className="text-[10px] text-mute-light dark:text-mute-dark">{s.character}</p>
+              <p className="text-[10px] text-mute-light dark:text-mute-dark">with {s.character} · {modeLabel}</p>
             </div>
           </div>
           <button onClick={onBack} className="w-9 h-9 rounded-full flex items-center justify-center bg-surface-light dark:bg-surface-dark shadow-soft"><Icon name="x" size={18}/></button>
@@ -585,26 +735,175 @@
           )}
         </div>
 
-        <div className="px-4 pt-2 pb-5 bg-surface-light/50 dark:bg-surface-dark/30 border-t border-lilac-soft dark:border-ink-light/10">
-          {isChoice && (
+        {/* ============== FOOTER — branches on activeMode ============== */}
+
+        {/* TAP MODE */}
+        {isChoice && activeMode === 'tap' && (
+          <div className="px-4 pt-3 pb-6 bg-white/70 dark:bg-surface-dark/60 backdrop-blur border-t border-lilac-soft dark:border-ink-light/10">
+            <div className="flex items-center justify-between px-1 pb-1.5">
+              <p className="text-[10px] uppercase tracking-widest font-extrabold text-mute-light dark:text-mute-dark">Tap a reply</p>
+              <button onClick={() => setActiveMode('speak')} className="text-[10px] font-extrabold text-lilac-strong dark:text-lilac-dark flex items-center gap-1">
+                <Icon name="mic" size={11}/> Switch to speak
+              </button>
+            </div>
             <div className="flex flex-col gap-2">
-              <p className="text-[11px] uppercase tracking-wide font-bold text-mute-light dark:text-mute-dark px-1">Tap a reply to continue</p>
               {current.choices.map(c => (
                 <button
                   key={c.id}
                   onClick={() => pickChoice(c)}
-                  className="text-left p-3 rounded-card bg-lilac-soft dark:bg-lilac/10 text-sm font-semibold active:scale-[0.99]"
+                  className="text-left p-3 rounded-card bg-lilac-soft dark:bg-lilac/10 text-sm font-bold active:scale-[0.99] transition"
                 >{c.text}</button>
               ))}
             </div>
-          )}
-          {isDone && (
+          </div>
+        )}
+
+        {/* TYPE MODE */}
+        {isChoice && activeMode === 'type' && (
+          <div className="px-3 pt-2.5 pb-6 bg-white/85 dark:bg-surface-dark/85 border-t border-lilac-soft dark:border-ink-light/10">
+            <div className="flex items-center justify-between px-1 pb-2">
+              <p className="text-[10px] uppercase tracking-widest font-extrabold text-mute-light dark:text-mute-dark">Type your reply</p>
+              <button onClick={() => setActiveMode('speak')} className="text-[10px] font-extrabold text-sky-strong dark:text-sky-dark flex items-center gap-1">
+                <Icon name="mic" size={11}/> Switch to speak
+              </button>
+            </div>
+            <div className="bg-white dark:bg-bg-dark rounded-full pl-4 pr-1.5 py-1.5 flex items-center gap-2 shadow-soft">
+              <input
+                value={draft}
+                onChange={e => setDraft(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); sendFreeText(); } }}
+                placeholder="Type your response…"
+                className="flex-1 bg-transparent outline-none text-sm min-h-[36px]"
+              />
+              <button
+                onClick={sendFreeText}
+                disabled={!draft.trim()}
+                aria-label="Send"
+                className="w-9 h-9 rounded-full bg-lilac-strong text-white flex items-center justify-center shadow-soft disabled:opacity-40"
+              >
+                <Icon name="send" size={16}/>
+              </button>
+            </div>
+            <div className="flex gap-1.5 mt-2.5 overflow-x-auto no-scrollbar">
+              {(TYPE_SUGGESTIONS[id] || ['okay', 'sure', 'thanks']).map((sug, i) => (
+                <button
+                  key={i}
+                  onClick={() => setDraft(d => (d ? d + ' ' : '') + sug)}
+                  className="px-3 py-1.5 rounded-full bg-lilac-soft dark:bg-lilac/10 text-lilac-strong dark:text-lilac-dark text-[11px] font-extrabold whitespace-nowrap active:scale-[0.98] transition"
+                >{sug}</button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* SPEAK MODE */}
+        {isChoice && activeMode === 'speak' && (
+          <div
+            className="px-4 pt-3 pb-6 border-t border-lilac-soft dark:border-ink-light/10 flex flex-col items-center gap-2.5"
+            style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.8) 0%, #DFEDDF 100%)' }}
+          >
+            <div className="flex items-center justify-between w-full px-1">
+              <button onClick={() => setActiveMode('tap')} className="text-[10px] font-extrabold text-mute-light dark:text-mute-dark flex items-center gap-1">
+                <Icon name="chevronLeft" size={11}/> Switch to tap
+              </button>
+              <p className="text-[10px] uppercase tracking-widest font-extrabold text-sage-strong">
+                {!speech.supported ? 'Not supported' : speech.listening ? 'Listening' : 'Tap mic to speak'}
+              </p>
+              <span className="w-[70px]"/>
+            </div>
+
+            <button
+              onClick={toggleMic}
+              disabled={!speech.supported}
+              aria-label={speech.listening ? 'Stop listening' : 'Start listening'}
+              className="relative w-28 h-28 flex items-center justify-center disabled:opacity-40"
+            >
+              <span className={`absolute inset-0 rounded-full bg-sage ${speech.listening ? 'orb-ring-1' : ''}`} style={{ opacity: 0.15 }}/>
+              <span className={`absolute inset-3 rounded-full bg-sage ${speech.listening ? 'orb-ring-2' : ''}`} style={{ opacity: 0.28 }}/>
+              <span className="absolute inset-7 rounded-full flex items-center justify-center shadow-soft" style={{ background: 'radial-gradient(circle, #fff 0%, #DFEDDF 100%)' }}>
+                <Icon name="mic" size={26} className="text-sage-strong"/>
+              </span>
+            </button>
+
+            {speech.listening && (
+              <div className="flex items-end gap-[2px] h-6">
+                {[5, 8, 12, 18, 14, 20, 16, 22, 19, 14, 10, 7, 11, 15, 9].map((h, i) => (
+                  <span
+                    key={i}
+                    className="wave-bar block w-[3px] rounded-full bg-sage-strong"
+                    style={{ height: h, animationDelay: `${i * 0.06}s`, opacity: 0.45 + (h / 40) }}
+                  />
+                ))}
+              </div>
+            )}
+
+            <div className="w-full bg-white rounded-card px-3.5 py-2.5 shadow-soft min-h-[44px] flex items-center justify-center">
+              <p className="text-sm italic text-ink-light text-center">
+                {draft
+                  ? draft + (speech.interim ? ' ' + speech.interim : '')
+                  : speech.interim
+                    ? <span className="opacity-70">{speech.interim}</span>
+                    : speech.error === 'not-allowed'
+                      ? <span className="not-italic text-mute-light">Mic permission was denied. Switch to type or tap.</span>
+                      : speech.supported
+                        ? <span className="not-italic text-mute-light">Tap the mic and say your response…</span>
+                        : <span className="not-italic text-mute-light">Speech isn't supported here. Switch to type or tap.</span>}
+              </p>
+            </div>
+
+            <div className="flex gap-2 w-full">
+              <button
+                onClick={() => setActiveMode('tap')}
+                className="flex-1 py-2.5 rounded-full bg-white text-mute-light dark:text-mute-dark text-[11px] font-extrabold shadow-soft flex items-center justify-center gap-1.5 active:scale-[0.98] transition"
+              >
+                <Icon name="sparkle" size={12}/> Switch to tap
+              </button>
+              <button
+                onClick={sendFreeText}
+                disabled={!draft.trim()}
+                className="flex-1 py-2.5 rounded-full bg-sage-strong text-white text-[11px] font-extrabold shadow-soft flex items-center justify-center gap-1.5 disabled:opacity-40 active:scale-[0.98] transition"
+              >
+                <span className="w-2 h-2 rounded-full bg-white"/> Tap to send
+              </button>
+            </div>
+
+            {privacy === 'cloud' && (
+              <p className="text-[10px] text-mute-light dark:text-mute-dark font-semibold text-center leading-snug px-2">
+                On this browser, speech is transcribed by Google. For on-device speech, use Safari.
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* DONE / WAITING states */}
+        {isDone && (
+          <div className="px-4 pt-3 pb-6 bg-surface-light/50 dark:bg-surface-dark/30 border-t border-lilac-soft dark:border-ink-light/10">
             <Button onClick={() => go('reflection', { id: s.id })}>Finish & reflect</Button>
-          )}
-          {!isChoice && !isDone && !typing && (
+          </div>
+        )}
+        {!isChoice && !isDone && !typing && (
+          <div className="px-4 pt-3 pb-6 border-t border-lilac-soft dark:border-ink-light/10">
             <p className="text-xs text-center text-mute-light dark:text-mute-dark">…</p>
-          )}
-        </div>
+          </div>
+        )}
+
+        {/* First-run mic privacy modal */}
+        {showMicNotice && (
+          <div className="absolute inset-0 bg-black/40 flex items-end z-50" onClick={() => setShowMicNotice(false)}>
+            <div className="bg-surface-light dark:bg-surface-dark rounded-t-modal p-5 w-full" onClick={e => e.stopPropagation()}>
+              <h3 className="font-extrabold text-base mb-1">Quick note about the mic</h3>
+              <p className="text-xs text-mute-light dark:text-mute-dark leading-relaxed mb-3">
+                {privacy === 'on-device'
+                  ? 'Your browser handles speech-to-text on your device. Astro does not record or store audio.'
+                  : 'Your browser sends audio to Google for transcription as part of its built-in speech feature. Astro does not record or store audio. For on-device speech, use Safari.'}
+              </p>
+              <div className="flex gap-2">
+                <button onClick={() => setShowMicNotice(false)} className="flex-1 py-2.5 rounded-btn bg-bg-light dark:bg-bg-dark font-bold text-sm">Not now</button>
+                <button onClick={acceptMicNotice} className="flex-1 py-2.5 rounded-btn bg-lilac-strong text-white font-bold text-sm">OK, got it</button>
+              </div>
+            </div>
+          </div>
+        )}
       </Container>
     );
   };
@@ -960,7 +1259,7 @@
               <span className="flex-1 font-semibold">{dark ? 'Light mode' : 'Dark mode'}</span>
               <span className="text-xs text-mute-light dark:text-mute-dark">{dark ? 'On' : 'Off'}</span>
             </button>
-            <button className="w-full p-4 flex items-center gap-3 text-left">
+            <button onClick={() => go('privacy')} className="w-full p-4 flex items-center gap-3 text-left">
               <Icon name="shield" size={18}/>
               <span className="flex-1 font-semibold">Privacy & data</span>
               <Icon name="chevronRight" size={16}/>
@@ -970,7 +1269,7 @@
               <span className="flex-1 font-semibold">Crisis resources</span>
               <Icon name="chevronRight" size={16}/>
             </button>
-            <button className="w-full p-4 flex items-center gap-3 text-left">
+            <button onClick={() => go('deleteData')} className="w-full p-4 flex items-center gap-3 text-left">
               <Icon name="trash" size={18}/>
               <span className="flex-1 font-semibold">Delete my data</span>
               <Icon name="chevronRight" size={16}/>
@@ -984,6 +1283,198 @@
     </Container>
     );
   };
+  // ---------- Privacy & data ----------
+  const PrivacyAndData = ({ onBack, go }) => {
+    const { user } = useAuth();
+    const [status, setStatus] = useState(null); // null | 'sending' | 'sent' | 'error' | 'guest'
+    const [errorMsg, setErrorMsg] = useState('');
+
+    const handleExport = async () => {
+      if (!user) {
+        setStatus('guest');
+        return;
+      }
+      setStatus('sending');
+      const res = await storage.requestEmailExport();
+      if (res.ok) setStatus('sent');
+      else { setStatus('error'); setErrorMsg(res.error || 'Something went wrong.'); }
+    };
+
+    return (
+      <Container>
+        <TopBar title="Privacy & data" onBack={onBack}/>
+        <Screen className="px-5 pb-6 flex flex-col gap-3">
+          <Card className="bg-lilac-soft dark:bg-lilac/10">
+            <p className="font-bold mb-1">What Astro stores</p>
+            <p className="text-sm text-mute-light dark:text-mute-dark leading-relaxed">
+              Your journal entries, reminders, and scenario sessions — tied to your account. Data is stored in Supabase, hosted in the United States.
+            </p>
+          </Card>
+
+          <Card>
+            <p className="font-bold mb-1 text-sm">About the mic</p>
+            <p className="text-xs text-mute-light dark:text-mute-dark leading-relaxed">
+              Speech-to-text runs through your browser. Safari keeps audio on-device. Chrome and Edge send audio to Google for transcription — Astro doesn't control that part and doesn't record or store audio itself. We're working on a fully on-device option.
+            </p>
+          </Card>
+
+          <div>
+            <p className="text-xs font-bold uppercase text-mute-light dark:text-mute-dark mt-2 mb-2 px-1">Your data, your call</p>
+            <Card className="divide-y divide-lilac-soft dark:divide-ink-light/10 p-0">
+              <button onClick={handleExport} disabled={status === 'sending'} className="w-full p-4 flex items-center gap-3 text-left disabled:opacity-60">
+                <Icon name="send" size={18}/>
+                <div className="flex-1">
+                  <p className="font-semibold">Email me a copy of my data</p>
+                  <p className="text-[11px] text-mute-light dark:text-mute-dark">{user ? `Sent to ${user.email}` : 'Sign in required'}</p>
+                </div>
+                <Icon name="chevronRight" size={16}/>
+              </button>
+              <button onClick={() => go('deleteData')} className="w-full p-4 flex items-center gap-3 text-left">
+                <Icon name="trash" size={18}/>
+                <div className="flex-1">
+                  <p className="font-semibold text-crisis">Delete all my data</p>
+                  <p className="text-[11px] text-mute-light dark:text-mute-dark">Permanent — we'll confirm first.</p>
+                </div>
+                <Icon name="chevronRight" size={16}/>
+              </button>
+            </Card>
+          </div>
+
+          {status === 'sending' && <Card><p className="text-sm text-mute-light dark:text-mute-dark">Sending your export…</p></Card>}
+          {status === 'sent' && <Card className="bg-sage-soft dark:bg-sage/10"><p className="text-sm">✓ Check your inbox — it may take a minute to arrive.</p></Card>}
+          {status === 'error' && (
+            <Card className="bg-coral/20">
+              <p className="text-sm font-bold mb-1">Export isn't available yet</p>
+              <p className="text-xs text-mute-light dark:text-mute-dark">{errorMsg}</p>
+            </Card>
+          )}
+          {status === 'guest' && <Card><p className="text-sm text-mute-light dark:text-mute-dark">You're using Astro as a guest — there's no account data to export. Your notes live on this device only.</p></Card>}
+
+          <p className="text-[11px] text-center text-mute-light dark:text-mute-dark mt-2">Questions? Astro is a supportive tool, not therapy or a medical device.</p>
+        </Screen>
+      </Container>
+    );
+  };
+
+  // ---------- Delete my data (confirm) ----------
+  const DeleteData = ({ onBack, go }) => {
+    const { user } = useAuth();
+    const [confirm, setConfirm] = useState('');
+    const [deleting, setDeleting] = useState(false);
+    const [error, setError] = useState('');
+
+    const canDelete = confirm.trim().toUpperCase() === 'DELETE';
+
+    const handleDelete = async () => {
+      if (!canDelete) return;
+      setDeleting(true);
+      setError('');
+      const res = await storage.deleteMyData();
+      setDeleting(false);
+      if (res.mode === 'guest') {
+        go('postDelete', { mode: 'guest' });
+        return;
+      }
+      if (res.ok) {
+        go('postDelete', { mode: 'account', authDeleted: true });
+      } else if (res.authDeleted === false && (!res.errors || res.errors.every(e => e.startsWith('auth:')))) {
+        // rows wiped, auth row orphaned — still a valid "soft delete" outcome
+        go('postDelete', { mode: 'account', authDeleted: false });
+      } else {
+        setError((res.errors || []).join(' · ') || 'Something went wrong. Your data may not be fully deleted.');
+      }
+    };
+
+    return (
+      <Container>
+        <TopBar title="Delete my data" onBack={onBack}/>
+        <Screen className="px-5 pb-6 flex flex-col gap-4">
+          <Card className="bg-coral/20">
+            <p className="font-bold mb-2">This cannot be undone.</p>
+            <p className="text-sm text-mute-light dark:text-mute-dark leading-relaxed">
+              We'll permanently delete your journal entries, reminders, scenario sessions, and profile. {user ? 'Your account will be removed too.' : 'Your local data on this device will be cleared.'}
+            </p>
+          </Card>
+
+          <Card>
+            <p className="font-bold mb-1 text-sm">What stays after deletion</p>
+            <ul className="text-xs text-mute-light dark:text-mute-dark leading-relaxed list-disc pl-4 space-y-1">
+              <li>Nothing in your account — we remove every row we store about you.</li>
+              <li>Anonymous, aggregated usage counts (never tied to you) may remain.</li>
+              <li>You can create a new account anytime.</li>
+            </ul>
+          </Card>
+
+          <div>
+            <p className="text-xs font-bold uppercase text-mute-light dark:text-mute-dark mb-2 px-1">Type DELETE to confirm</p>
+            <input
+              value={confirm}
+              onChange={e => setConfirm(e.target.value)}
+              placeholder="DELETE"
+              className="w-full p-3 rounded-card bg-surface-light dark:bg-surface-dark text-sm outline-none focus:ring-2 focus:ring-crisis font-bold tracking-widest uppercase"
+            />
+          </div>
+
+          {error && (
+            <Card className="bg-coral/20">
+              <p className="text-xs font-bold mb-1">We hit a problem</p>
+              <p className="text-[11px] text-mute-light dark:text-mute-dark">{error}</p>
+            </Card>
+          )}
+
+          <div className="mt-auto flex flex-col gap-2">
+            <Button variant="danger" disabled={!canDelete || deleting} onClick={handleDelete}>
+              {deleting ? 'Deleting…' : 'Delete my data'}
+            </Button>
+            <Button variant="ghost" onClick={onBack}>Cancel</Button>
+          </div>
+        </Screen>
+      </Container>
+    );
+  };
+
+  // ---------- Post-delete: sorry to see you go ----------
+  const PostDelete = ({ mode, authDeleted, go }) => (
+    <Container>
+      <Screen className="px-6 pt-16 pb-6 flex flex-col items-center gap-5 text-center">
+        <Panda mood="listen" size={120}/>
+        <h2 className="text-2xl font-extrabold">We're sorry to see you go.</h2>
+        <p className="text-sm text-mute-light dark:text-mute-dark leading-relaxed px-2">
+          {mode === 'guest'
+            ? 'Your on-device data is cleared. If Astro ever feels useful again, everything starts fresh.'
+            : 'Your account data is deleted. You can keep using Astro as a guest anytime — nothing you do here needs an account.'}
+        </p>
+
+        {mode === 'account' && !authDeleted && (
+          <Card className="bg-coral/10 text-left">
+            <p className="text-xs font-bold mb-1">One detail</p>
+            <p className="text-[11px] text-mute-light dark:text-mute-dark leading-relaxed">
+              Your login was kept for now — the final step needs a service update. If you want it fully removed, email us and we'll handle it manually.
+            </p>
+          </Card>
+        )}
+
+        <Card className="bg-sage-soft dark:bg-sage/10 w-full text-left">
+          <div className="flex items-start gap-3">
+            <div className="text-2xl shrink-0">🌱</div>
+            <div>
+              <p className="font-bold text-sm">You can always come back — even as a guest.</p>
+              <p className="text-xs text-mute-light dark:text-mute-dark mt-1 leading-relaxed">Sessions stay on your device. No account needed. Pick up whenever it feels right.</p>
+            </div>
+          </div>
+        </Card>
+
+        <div className="mt-auto w-full flex flex-col gap-2">
+          <Button onClick={() => go('tabs')}>Continue as guest</Button>
+          <Button variant="ghost" onClick={() => go('welcome')}>Back to welcome</Button>
+        </div>
+
+        <p className="text-[11px] text-mute-light dark:text-mute-dark leading-relaxed px-4 mt-2">
+          If you're struggling and that's why you're leaving, you're not alone — call or text <b>988</b> (US & Canada).
+        </p>
+      </Screen>
+    </Container>
+  );
 
   // ---------- Crisis resources ----------
   const Crisis = ({ onBack }) => (
@@ -1087,7 +1578,7 @@
         {stage === 'running' && (
           <Screen className="px-6 flex flex-col items-center justify-center gap-8">
             <div className="relative flex items-center justify-center h-64 w-64">
-              <div className={`absolute rounded-full bg-sky-soft dark:bg-sky/20 transition-all duration-[3000ms] ${phase === 'in' ? 'w-60 h-60' : phase === 'hold' ? 'w-60 h-60' : 'w-24 h-24'}`}/>
+              <div className={`absolute rounded-full bg-sky-soft dark:bg-sky/40 transition-all duration-[3000ms] ${phase === 'in' ? 'w-60 h-60' : phase === 'hold' ? 'w-60 h-60' : 'w-24 h-24'}`}/>
               <p className="relative text-2xl font-extrabold">
                 {phase === 'in' ? 'Breathe in' : phase === 'hold' ? 'Hold' : 'Breathe out'}
               </p>
