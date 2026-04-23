@@ -181,5 +181,76 @@
       }
 
       return { migrated };
+    },
+
+    // Export all user data — delivered by email via the 'export-me' edge function.
+    // Returns { ok, error }. If the function isn't deployed yet, returns a
+    // clear error message so the UI can explain.
+    async requestEmailExport() {
+      const user = await getCurrentUser();
+      if (!user || !window.supabase) return { ok: false, error: 'Sign in required.' };
+      try {
+        const { data, error } = await window.supabase.functions.invoke('export-me', {
+          body: {}
+        });
+        if (error) return { ok: false, error: error.message || 'Export failed.' };
+        return { ok: true, ...data };
+      } catch (e) {
+        return { ok: false, error: e.message || 'Export service unavailable.' };
+      }
+    },
+
+    // Delete every row the user owns. Client-side deletes are the first line
+    // (RLS enforces own-data). The 'delete-me' edge function does the auth.users
+    // row deletion (needs admin privileges). If the function isn't deployed,
+    // rows are still wiped and the user is signed out — their login will orphan
+    // until support or Batch 4's edge function catches up.
+    async deleteMyData() {
+      const user = await getCurrentUser();
+      if (!user || !window.supabase) {
+        // Guest path: nuke local data.
+        try {
+          localStorage.removeItem('astro.journal');
+          localStorage.removeItem('astro.reminders');
+          localStorage.removeItem('astro.sessions');
+          localStorage.removeItem('astro_mic_notice_v1');
+        } catch (e) {}
+        return { ok: true, mode: 'guest' };
+      }
+
+      const errors = [];
+      // 1) Delete owned rows across every user-data table (RLS-enforced).
+      for (const table of ['journal_entries', 'reminders', 'sessions']) {
+        const { error } = await window.supabase.from(table).delete().eq('user_id', user.id);
+        if (error) errors.push(`${table}: ${error.message}`);
+      }
+      // 2) Delete the profile row.
+      {
+        const { error } = await window.supabase.from('profiles').delete().eq('id', user.id);
+        if (error) errors.push(`profiles: ${error.message}`);
+      }
+
+      // 3) Call edge function to delete auth.users. If it's not deployed, we
+      // still clear rows + sign out — the auth row becomes an orphan until
+      // the function is live.
+      let authDeleted = false;
+      try {
+        const { error } = await window.supabase.functions.invoke('delete-me', { body: {} });
+        if (!error) authDeleted = true;
+        else errors.push(`auth: ${error.message}`);
+      } catch (e) {
+        errors.push(`auth: ${e.message || 'service unavailable'}`);
+      }
+
+      // 4) Local cleanup + sign out.
+      try {
+        localStorage.removeItem('astro.journal');
+        localStorage.removeItem('astro.reminders');
+        localStorage.removeItem('astro.sessions');
+        localStorage.removeItem('astro_mic_notice_v1');
+      } catch (e) {}
+      await window.supabase.auth.signOut();
+
+      return { ok: errors.length === 0, authDeleted, errors };
     }
   };
