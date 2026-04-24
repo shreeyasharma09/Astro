@@ -62,30 +62,6 @@ export function DesktopFrame({ children }: DesktopFrameProps) {
       {/* The phone */}
       <div className="relative z-10">{children}</div>
 
-      {/* Keyboard shortcut hints — desktop only */}
-      <div className="hidden lg:flex fixed bottom-4 left-1/2 -translate-x-1/2 z-40 gap-3 items-center bg-white/70 dark:bg-surface-dark/70 backdrop-blur rounded-full px-4 py-2 shadow-soft border border-lilac-soft/60 dark:border-transparent">
-        <KeyHint keys={['1', '2', '3']} label="reply" />
-        <span className="w-px h-3 bg-mute-light/30" />
-        <KeyHint keys={['Esc']} label="back" />
-        <span className="w-px h-3 bg-mute-light/30" />
-        <KeyHint keys={['M']} label="mic" />
-      </div>
-    </div>
-  );
-}
-
-function KeyHint({ keys, label }: { keys: string[]; label: string }) {
-  return (
-    <div className="flex items-center gap-1.5">
-      <div className="flex gap-0.5">
-        {keys.map((k) => (
-          <kbd
-            key={k}
-            className="text-[10px] font-bold bg-white dark:bg-bg-dark border border-lilac-soft/70 dark:border-ink-light/10 rounded px-1.5 py-0.5 shadow-[inset_0_-1px_0_rgba(0,0,0,0.05)]"
-          >{k}</kbd>
-        ))}
-      </div>
-      <span className="text-[10px] text-mute-light dark:text-mute-dark font-semibold">{label}</span>
     </div>
   );
 }

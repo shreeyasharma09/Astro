@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Screen } from '../components/Screen';
 import { Button } from '../components/Button';
 import { Tulip } from '../components/Tulip';
 import { Panda, type PandaMood } from '../components/Panda';
+import { PageLayout } from '../components/PageLayout';
 
 interface WelcomeProps {
   onDone: () => void;
@@ -25,22 +25,26 @@ export function Welcome({ onDone }: WelcomeProps) {
   const slide = slides[idx];
 
   return (
-    <Screen className="flex flex-col items-center justify-between px-8 pt-12 pb-8 text-center">
-      <div className="flex flex-col items-center gap-6 mt-8">
-        {slide.hero === 'tulip' ? <Tulip size={170} /> : <Panda mood={slide.mood} size={160} />}
-        <h2 className="text-2xl font-extrabold">{slide.title}</h2>
-        <p className="text-mute-light dark:text-mute-dark text-base leading-relaxed">{slide.body}</p>
-      </div>
-      <div className="w-full flex flex-col items-center gap-4">
-        <div className="flex gap-2">
-          {slides.map((_, i) => (
-            <span key={i} className={`h-1.5 rounded-full transition-all ${i === idx ? 'w-6 bg-lilac-strong' : 'w-1.5 bg-lilac-soft'}`} />
-          ))}
-        </div>
-        <Button onClick={() => (idx < slides.length - 1 ? setIdx(idx + 1) : onDone())}>
-          {idx < slides.length - 1 ? 'Next' : "Let's go"}
-        </Button>
-      </div>
-    </Screen>
+    <PageLayout
+      header={
+        <>
+          {slide.hero === 'tulip' ? <Tulip size={170} /> : <Panda mood={slide.mood} size={160} />}
+          <h2 className="text-2xl font-extrabold">{slide.title}</h2>
+          <p className="text-mute-light dark:text-mute-dark text-base leading-relaxed">{slide.body}</p>
+        </>
+      }
+      actions={
+        <>
+          <div className="flex justify-center gap-2">
+            {slides.map((_, i) => (
+              <span key={i} className={`h-1.5 rounded-full transition-all ${i === idx ? 'w-6 bg-lilac-strong' : 'w-1.5 bg-lilac-soft'}`} />
+            ))}
+          </div>
+          <Button onClick={() => (idx < slides.length - 1 ? setIdx(idx + 1) : onDone())}>
+            {idx < slides.length - 1 ? 'Next' : "Let's go"}
+          </Button>
+        </>
+      }
+    />
   );
 }

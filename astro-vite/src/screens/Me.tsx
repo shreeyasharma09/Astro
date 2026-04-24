@@ -9,6 +9,16 @@ import { BottomNav, type NavId } from '../components/BottomNav';
 import { useAuth } from '../hooks/useAuth';
 import { storage, signOutUser } from '../services/storage';
 
+// notif
+const perm = await Notification.requestPermission();
+
+if (perm === 'granted') {
+  new Notification('Time to practice', {
+    body: 'Dinner with friends is in 1 hour. Ready to rehearse?',
+    icon: '/tulip.png',
+  });
+}
+
 interface MeProps {
   go: (route: string, params?: Record<string, any>) => void;
   nav: NavId;
