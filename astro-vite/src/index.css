@@ -81,7 +81,7 @@ html, body {
 }
 @media (min-width: 1024px) {
   .device-frame {
-    max-height: min(720px, 88dvh);
+    max-height: 720px;
     transform: scale(1.04);
     transform-origin: center;
     box-shadow: 0 40px 80px rgba(142, 120, 208, 0.25),
