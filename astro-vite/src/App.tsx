@@ -26,6 +26,7 @@ import { JournalNew } from './screens/JournalNew';
 import { PrivacyAndData } from './screens/PrivacyAndData';
 import { DeleteData } from './screens/DeleteData';
 import { PostDelete } from './screens/PostDelete';
+import { DesktopFrame } from './components/DesktopFrame';
 
 interface Route {
   name: string;
@@ -153,7 +154,7 @@ export default function App() {
           <option value="breathing">Breathing</option>
         </select>
       </div>
-      {renderScreen()}
+      <DesktopFrame>{renderScreen()}</DesktopFrame>
     </>
   );
 }

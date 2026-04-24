@@ -7,6 +7,7 @@ import { SCENARIOS, DEMO_TURNS, TYPE_SUGGESTIONS, type Turn } from '../lib/scena
 import { containsCrisisLanguage } from '../lib/crisis';
 import { getSpeechPrivacyMode } from '../lib/privacy';
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 
 interface RoleplayProps {
   id: string;
@@ -100,6 +101,41 @@ export function Roleplay({ id, mode = 'tap', onBack, go }: RoleplayProps) {
     setShowMicNotice(false);
     speech.start();
   };
+
+  useKeyboardShortcuts(
+    {
+      '1': () => {
+        if (isChoice && activeMode === 'tap' && (current as any).choices[0]) {
+          pickChoice((current as any).choices[0]);
+        }
+      },
+      '2': () => {
+        if (isChoice && activeMode === 'tap' && (current as any).choices[1]) {
+          pickChoice((current as any).choices[1]);
+        }
+      },
+      '3': () => {
+        if (isChoice && activeMode === 'tap' && (current as any).choices[2]) {
+          pickChoice((current as any).choices[2]);
+        }
+      },
+      m: () => {
+        if (activeMode === 'speak') toggleMic();
+      },
+      Escape: () => {
+        if (showMicNotice) {
+          setShowMicNotice(false);
+          return;
+        }
+        if (speech.listening) {
+          speech.stop();
+          return;
+        }
+        onBack();
+      },
+    },
+    true
+  );
 
   const modeLabel = activeMode === 'tap' ? 'tap mode' : activeMode === 'type' ? 'type mode' : 'speak mode';
 
