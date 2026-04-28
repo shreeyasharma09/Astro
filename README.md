@@ -2,9 +2,6 @@
 
 A gentle practice space for social anxiety — a pocket companion for the moments before, during, and after real-world interactions. Ordering coffee, making phone calls, small talk, joining a conversation, saying no.
 
-## Vercel Live Link
-https://astro-sap.vercel.app/
-
 ## Status
 
 🌱 **Interactive prototype complete.** Pending: clinical review of scenarios, commission of final mascot art, React Native build.
