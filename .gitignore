@@ -33,3 +33,6 @@ out/
 __pycache__/
 *.pyc
 .venv/
+
+# Claude Code worktrees (isolated per-session copies)
+.claude/worktrees/

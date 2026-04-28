@@ -15,7 +15,7 @@ Three modes for three moments:
 
 ## Try it
 
-Open [`prototype/index.html`](./prototype/index.html) in any browser. Or run locally:
+Open: [`https://astro-sap.vercel.app/`](.https://astro-sap.vercel.app/) in any browser. Or run locally:
 
 ```bash
 python3 -m http.server 4173 --directory prototype
