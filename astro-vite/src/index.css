@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ========== Base ========== */
 html, body {
   font-family: 'Nunito', system-ui, -apple-system, sans-serif;
   overscroll-behavior: none;
@@ -12,12 +13,15 @@ html, body {
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-/* ========== Phone device frame ========== */
+/* ========== Phone device frame ==========
+   Fixed 720px height at all viewports ≥ 430px so every screen
+   renders in an identical frame. True mobile (<430px) goes
+   full-viewport to fill the device screen naturally. */
 .device-frame {
   width: 100%;
   max-width: 420px;
-  height: 100dvh;
-  max-height: 900px;
+  height: 720px;
+  max-height: 720px;
   border-radius: 44px;
   overflow: hidden;
   box-shadow: 0 24px 60px rgba(45, 42, 62, 0.18);
@@ -26,19 +30,19 @@ html, body {
 }
 .dark .device-frame { box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5); }
 
-/* Phone full-bleed on mobile */
+/* True mobile: phone becomes the whole viewport */
 @media (max-width: 430px) {
   .device-frame {
-    border-radius: 0;
+    height: 100dvh;
     max-height: 100dvh;
+    border-radius: 0;
     box-shadow: none;
   }
 }
 
+/* Desktop: softer bezel ring around the scaled phone */
 @media (min-width: 1024px) {
   .device-frame {
-    height: 720px !important;
-    max-height: 720px !important;
     transform: scale(1.04);
     transform-origin: center;
     box-shadow:
