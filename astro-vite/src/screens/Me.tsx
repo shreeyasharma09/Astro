@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Container } from '../components/Container';
 import { Screen } from '../components/Screen';
 import { TopBar } from '../components/TopBar';
@@ -8,16 +8,6 @@ import { Panda } from '../components/Panda';
 import { BottomNav, type NavId } from '../components/BottomNav';
 import { useAuth } from '../hooks/useAuth';
 import { storage, signOutUser } from '../services/storage';
-
-// notif
-const perm = await Notification.requestPermission();
-
-if (perm === 'granted') {
-  new Notification('Time to practice', {
-    body: 'Dinner with friends is in 1 hour. Ready to rehearse?',
-    icon: '/tulip.png',
-  });
-}
 
 interface MeProps {
   go: (route: string, params?: Record<string, any>) => void;
@@ -34,6 +24,28 @@ export function Me({ go, nav, setNav, dark, setDark, onCrisis }: MeProps) {
   const { user } = useAuth();
   const [upgradeStatus, setUpgradeStatus] = useState<UpgradeStatus>(null);
 
+  // SAFE NOTIFICATION IMPLEMENTATION
+  useEffect(() => {
+    const checkAndTriggerNotification = async () => {
+      // Simple safety check: ensures 'Notification' exists (prevents iPhone crash)
+      if (typeof window !== 'undefined' && 'Notification' in window) {
+        try {
+          const perm = await Notification.requestPermission();
+          if (perm === 'granted') {
+            new Notification('Time to practice', {
+              body: 'Dinner with friends is in 1 hour. Ready to rehearse?',
+              icon: '/tulip.png', // Brand asset
+            });
+          }
+        } catch (err) {
+          console.warn("Notification request failed:", err);
+        }
+      }
+    };
+
+    checkAndTriggerNotification();
+  }, []); // Runs once when the screen loads
+
   const handleUpgrade = async () => {
     setUpgradeStatus('running');
     const { migrated } = await storage.upgradeGuest();
@@ -48,6 +60,7 @@ export function Me({ go, nav, setNav, dark, setDark, onCrisis }: MeProps) {
     <Container>
       <TopBar title="Me" />
       <Screen className="px-5 pb-6 flex flex-col gap-3">
+        {/* User Profile Card */}
         <Card className="flex items-center gap-3">
           <Panda mood="cheer" size={56} />
           <div className="flex-1">
@@ -63,6 +76,7 @@ export function Me({ go, nav, setNav, dark, setDark, onCrisis }: MeProps) {
           )}
         </Card>
 
+        {/* Data Migration Logic */}
         {user && upgradeStatus === null && (
           <Card className="flex items-center gap-3 bg-sage-soft dark:bg-sage/10">
             <div className="flex-1">
@@ -82,6 +96,7 @@ export function Me({ go, nav, setNav, dark, setDark, onCrisis }: MeProps) {
           <Card><p className="text-sm text-mute-light dark:text-mute-dark">No guest data to move — you're all set.</p></Card>
         )}
 
+        {/* Gentle Streak Tracking */}
         <div>
           <p className="text-xs font-bold uppercase text-mute-light dark:text-mute-dark mt-3 mb-2 px-1">Your streak</p>
           <Card className="flex items-center justify-between">
@@ -93,6 +108,7 @@ export function Me({ go, nav, setNav, dark, setDark, onCrisis }: MeProps) {
           </Card>
         </div>
 
+        {/* Settings and Safety Links */}
         <div>
           <p className="text-xs font-bold uppercase text-mute-light dark:text-mute-dark mt-3 mb-2 px-1">Settings</p>
           <Card className="divide-y divide-lilac-soft dark:divide-ink-light/10 p-0">
@@ -108,7 +124,7 @@ export function Me({ go, nav, setNav, dark, setDark, onCrisis }: MeProps) {
             </button>
             <button onClick={onCrisis} className="w-full p-4 flex items-center gap-3 text-left">
               <Icon name="heart" size={18} />
-              <span className="flex-1 font-semibold">Crisis resources</span>
+              <span className="flex-1 font-semibold">Crisis resources</span> {/* Reachable in 2 taps */}
               <Icon name="chevronRight" size={16} />
             </button>
             <button onClick={() => go('deleteData')} className="w-full p-4 flex items-center gap-3 text-left">
