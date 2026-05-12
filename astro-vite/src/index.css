@@ -6,34 +6,51 @@
 html, body {
   font-family: 'Nunito', system-ui, -apple-system, sans-serif;
   overscroll-behavior: none;
-  background: #EEE7F9;
+  background: #EEE7F9; /* Default background for desktop outer area */
 }
-.dark html, .dark body { background: #0E0D18; }
+
+.dark html, .dark body { 
+  background: #0E0D18; 
+}
 
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-/* ========== Phone device frame ==========
-   Fixed 720px height at all viewports ≥ 430px so every screen
-   renders in an identical frame. True mobile (<430px) goes
-   full-viewport to fill the device screen naturally. */
+/* ========== Phone device frame ========== 
+   The fixed frame used on larger viewports.
+   Ensures consistent layout for high-fidelity prototyping. */
 .device-frame {
+  display: flex;             /* Fix: Recognize internal parts [cite: 2683] */
+  flex-direction: column;    /* Fix: Stack content vertically [cite: 2683] */
   width: 100%;
   max-width: 420px;
-  height: 720px;
+  height: 720px;             /* Fixed height for simulation */
   max-height: 720px;
+  margin: auto;              /* Fix: Center on desktop  */
   border-radius: 44px;
-  overflow: hidden;
-  box-shadow: 0 24px 60px rgba(45, 42, 62, 0.18);
+  overflow: hidden;          /* Keep rounded corner aesthetic [cite: 2647] */
   position: relative;
   background-clip: padding-box;
+  box-shadow: 0 24px 60px rgba(45, 42, 62, 0.18);
+  background: #FFF;          /* Default inside-phone background */
 }
-.dark .device-frame { box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5); }
+
+.dark .device-frame { 
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5); 
+}
+
+/* Fix: Dedicated scroller for long screens like Practice Library [cite: 2680, 2684] */
+.content-scroller {
+  flex: 1;
+  overflow-y: auto;          /* Fix: Allow swiping [cite: 2684] */
+  -webkit-overflow-scrolling: touch;
+}
 
 /* True mobile: phone becomes the whole viewport */
 @media (max-width: 430px) {
   .device-frame {
-    height: 100dvh;
+    height: 100vh;           /* Fallback for older browsers [cite: 3317] */
+    height: 100dvh;          /* True dynamic viewport height [cite: 3307] */
     max-height: 100dvh;
     border-radius: 0;
     box-shadow: none;

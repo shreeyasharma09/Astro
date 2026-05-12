@@ -154,7 +154,13 @@ export default function App() {
           <option value="breathing">Breathing</option>
         </select>
       </div>
-      <DesktopFrame>{renderScreen()}</DesktopFrame>
+
+      {/* FIXED WRAPPER */}
+      <DesktopFrame>
+        <div className="content-scroller">
+          {renderScreen()}
+        </div>
+      </DesktopFrame>
     </>
   );
 }
